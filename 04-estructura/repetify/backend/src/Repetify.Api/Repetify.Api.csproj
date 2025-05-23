@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>08f41d21-8f17-48d6-984f-5176dfadee7e</UserSecretsId>
+  </PropertyGroup>
+
+	<PropertyGroup>
+		<NoWarn>CA1515</NoWarn>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="NSwag.AspNetCore" Version="14.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Repetify.Application\Repetify.Application.csproj" />
+    <ProjectReference Include="..\Repetify.AuthPlatform\Repetify.AuthPlatform.csproj" />
+    <ProjectReference Include="..\Repetify.Infrastructure.Persistence.EfCore\Repetify.Infrastructure.Persistence.EfCore.csproj" />
+    <ProjectReference Include="..\Repetify.Domain\Repetify.Domain.csproj" />
+    <ProjectReference Include="..\Repetify.Infrastructure\Repetify.Infrastructure.csproj" />
+  </ItemGroup>
+  
+</Project>

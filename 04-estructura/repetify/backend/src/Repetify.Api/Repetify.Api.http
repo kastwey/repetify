@@ -1,0 +1,6 @@
+@Repetify.Web_HostAddress = http://localhost:5038
+
+GET {{Repetify.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

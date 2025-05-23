@@ -1,0 +1,112 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+msbuild.log
+msbuild.err
+msbuild.wrn
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# User-specific files
+*.rsuser
+*.userprefs
+*.dotCover
+*.ncrunch*
+*.nunit.*
+*.cache
+*.log
+*.ide/
+
+# ASP.NET / Blazor related
+wwwroot/node_modules/
+wwwroot/lib/
+wwwroot/dist/
+**/node_modules/
+**/bower_components/
+dist/
+npm-debug.log
+yarn-error.log
+client/dist/
+coverage/
+publish/
+out/
+.vscode/
+
+# Resharper files
+*_Resharper*/
+*.DotSettings.user
+_TeamCity/
+
+# Rider files
+.idea/
+*.sln.iml
+
+# Include for Blazor WASM/Azure specific deployments
+wwwroot/_framework/
+wwwroot/service-worker.published.js
+
+# Dependency directories
+node_modules/
+bower_components/
+jspm_packages/
+typings/
+
+# Logs and temp files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+gulp-debug.log*
+**/node_modules/**/npm-debug.log*
+
+# NPM package lock files
+package-lock.json
+yarn.lock
+
+# Environment-specific settings
+.env
+.env.local
+.env.*.local
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# MacOS files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux files
+*~
+.nfs*
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+NuGet.config
+packages/
+project.lock.json
+project.assets.json
+global.json
