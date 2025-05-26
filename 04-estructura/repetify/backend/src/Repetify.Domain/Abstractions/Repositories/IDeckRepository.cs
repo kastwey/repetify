@@ -49,14 +49,14 @@ public interface IDeckRepository
 	/// <param name="name">The name of the deck to check.</param>  
 	/// <param name="userId">The identifier of the user.</param>  
 	/// <returns>A boolean indicating whether the deck name exists for the user.</returns>  
-	Task<bool> DeckNameExistsForUserAsync(Guid deckId, string name, Guid userId);
+	Task<Result<bool>> DeckNameExistsForUserAsync(Guid deckId, string name, Guid userId);
 
 	/// <summary>  
 	/// Gets the count of cards in a specific deck.  
 	/// </summary>  
 	/// <param name="deckId">The identifier of the deck.</param>  
 	/// <returns>The number of cards in the deck.</returns>  
-	Task<int> GetCardCountAsync(Guid deckId);
+	Task<Result<int>> GetCardCountAsync(Guid deckId);
 
 	/// <summary>  
 	/// Gets a card by its identifier within a specific deck asynchronously.  

@@ -10,7 +10,7 @@ namespace Repetify.Application.Dtos;
 /// <summary>  
 /// Data Transfer Object for adding or editing a user.  
 /// </summary>  
-public class AddOrEditUserDto
+public class AddOrUpdateUserDto
 {
 	/// <summary>  
 	/// Gets or sets the username of the user.  

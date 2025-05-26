@@ -2,9 +2,9 @@
 
 using Repetify.Infrastructure.Persistence.EfCore.Context;
 
-namespace Repetify.Infrastructure.Persistence.EfCore.Tests.Helpers;
+namespace Repetify.Infrastructure.Persistence.EfCore.UnitTests.Helpers;
 
-internal static class TestHelpers
+internal static class TestsHelper
 {
 	internal static RepetifyDbContext CreateInMemoryDbContext()
 	{

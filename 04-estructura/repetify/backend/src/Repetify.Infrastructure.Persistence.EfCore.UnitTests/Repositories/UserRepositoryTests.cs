@@ -2,9 +2,9 @@
 
 using Repetify.Domain.Entities;
 using Repetify.Infrastructure.Persistence.EfCore.Repositories;
-using Repetify.Infrastructure.Persistence.EfCore.Tests.Helpers;
+using Repetify.Infrastructure.Persistence.EfCore.UnitTests.Helpers;
 
-namespace Repetify.Infrastructure.Persistence.EfCore.Tests.Repositories;
+namespace Repetify.Infrastructure.Persistence.EfCore.UnitTests.Repositories;
 
 public class UserRepositoryTests
 {
@@ -12,7 +12,7 @@ public class UserRepositoryTests
 	public async Task GetUserByEmailAsync_ShouldReturnUser_WhenUserExists()
 	{
 		// Arrange  
-		using var context = TestHelpers.CreateInMemoryDbContext();
+		using var context = TestsHelper.CreateInMemoryDbContext();
 		var repository = new UserRepository(context);
 		var user = new User(Guid.NewGuid(), "testuser", "test@example.com");
 		await repository.AddUserAsync(user);
@@ -31,7 +31,7 @@ public class UserRepositoryTests
 	public async Task EmailAlreadyExists_ShouldReturnTrue_WhenEmailExists()
 	{
 		// Arrange  
-		using var context = TestHelpers.CreateInMemoryDbContext();
+		using var context = TestsHelper.CreateInMemoryDbContext();
 		var repository = new UserRepository(context);
 		var user = new User(Guid.NewGuid(), "testuser", "test@example.com");
 		await repository.AddUserAsync(user);
@@ -41,28 +41,30 @@ public class UserRepositoryTests
 		var result = await repository.EmailAlreadyExistsAsync(Guid.NewGuid(), "test@example.com");
 
 		// Assert  
-		Assert.True(result);
+		Assert.True(result.IsSuccess);
+		Assert.True(result.Value);
 	}
 
 	[Fact]
 	public async Task EmailAlreadyExists_ShouldReturnFalse_WhenEmailDoesNotExist()
 	{
 		// Arrange  
-		using var context = TestHelpers.CreateInMemoryDbContext();
+		using var context = TestsHelper.CreateInMemoryDbContext();
 		var repository = new UserRepository(context);
 
 		// Act  
 		var result = await repository.EmailAlreadyExistsAsync(Guid.NewGuid(), "nonexistent@example.com");
 
 		// Assert  
-		Assert.False(result);
+		Assert.True(result.IsSuccess);
+		Assert.False(result.Value);
 	}
 
 	[Fact]
 	public async Task UsernameAlreadyExists_ShouldReturnTrue_WhenUsernameExists()
 	{
 		// Arrange  
-		using var context = TestHelpers.CreateInMemoryDbContext();
+		using var context = TestsHelper.CreateInMemoryDbContext();
 		var repository = new UserRepository(context);
 		var user = new User(Guid.NewGuid(), "testuser", "test@example.com");
 		await repository.AddUserAsync(user);
@@ -72,28 +74,30 @@ public class UserRepositoryTests
 		var result = await repository.UsernameAlreadyExistsAsync(Guid.NewGuid(), "testuser");
 
 		// Assert  
-		Assert.True(result);
+		Assert.True(result.IsSuccess);
+		Assert.True(result.Value);
 	}
 
 	[Fact]
 	public async Task UsernameAlreadyExists_ShouldReturnFalse_WhenUsernameDoesNotExist()
 	{
 		// Arrange  
-		using var context = TestHelpers.CreateInMemoryDbContext();
+		using var context = TestsHelper.CreateInMemoryDbContext();
 		var repository = new UserRepository(context);
 
 		// Act  
 		var result = await repository.UsernameAlreadyExistsAsync(Guid.NewGuid(), "nonexistentuser");
 
 		// Assert  
-		Assert.False(result);
+		Assert.True(result.IsSuccess);
+		Assert.False(result.Value);
 	}
 
 	[Fact]
 	public async Task AddUserAsync_ShouldAddUserToDatabase()
 	{
 		// Arrange  
-		using var context = TestHelpers.CreateInMemoryDbContext();
+		using var context = TestsHelper.CreateInMemoryDbContext();
 		var repository = new UserRepository(context);
 		var user = new User(Guid.NewGuid(), "testuser", "test@example.com");
 
@@ -111,7 +115,7 @@ public class UserRepositoryTests
 	public async Task UpdateUser_ShouldUpdateUserInDatabase()
 	{
 		// Arrange  
-		using var context = TestHelpers.CreateInMemoryDbContext();
+		using var context = TestsHelper.CreateInMemoryDbContext();
 		var repository = new UserRepository(context);
 		var user = new User(Guid.NewGuid(), "testuser", "test@example.com");
 		await repository.AddUserAsync(user);
@@ -132,7 +136,7 @@ public class UserRepositoryTests
 	public async Task DeleteUserAsync_ShouldRemoveUserFromDatabase_WhenUserExists()
 	{
 		// Arrange  
-		using var context = TestHelpers.CreateInMemoryDbContext();
+		using var context = TestsHelper.CreateInMemoryDbContext();
 		var repository = new UserRepository(context);
 		var user = new User(Guid.NewGuid(), "testuser", "test@example.com");
 		await repository.AddUserAsync(user);
@@ -152,7 +156,7 @@ public class UserRepositoryTests
 	public async Task DeleteUserAsync_ShouldReturnFalse_WhenUserDoesNotExist()
 	{
 		// Arrange  
-		using var context = TestHelpers.CreateInMemoryDbContext();
+		using var context = TestsHelper.CreateInMemoryDbContext();
 		var repository = new UserRepository(context);
 
 		// Act  

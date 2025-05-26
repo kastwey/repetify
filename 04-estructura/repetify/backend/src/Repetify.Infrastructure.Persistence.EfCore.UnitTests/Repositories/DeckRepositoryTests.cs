@@ -4,10 +4,10 @@ using Repetify.Crosscutting;
 using Repetify.Domain.Entities;
 using Repetify.Infrastructure.Persistence.EfCore.Context;
 using Repetify.Infrastructure.Persistence.EfCore.Repositories;
-using Repetify.Infrastructure.Persistence.EfCore.Tests.Helpers;
+using Repetify.Infrastructure.Persistence.EfCore.UnitTests.Helpers;
 
 
-namespace Repetify.Infrastructure.Persistence.EfCore.Tests.Repositories;
+namespace Repetify.Infrastructure.Persistence.EfCore.UnitTests.Repositories;
 
 public class DeckRepositoryTests
 {
@@ -15,7 +15,7 @@ public class DeckRepositoryTests
 	public async Task AddDeckAsync_ShouldAddDeckSuccessfully()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid(), "EN", "ES");
@@ -36,7 +36,7 @@ public class DeckRepositoryTests
 	public async Task EditDeckAsync_ShouldUpdateDeckSuccessfully()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Original Name", "Original Description", Guid.NewGuid(), "EN", "ES");
@@ -59,7 +59,7 @@ public class DeckRepositoryTests
 	public async Task DeleteDeckAsync_ShouldReturnTrue_WhenDeckExists()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Deck to delete", "Test", Guid.NewGuid(), "EN", "FR");
@@ -79,7 +79,7 @@ public class DeckRepositoryTests
 	public async Task DeleteDeckAsync_ShouldReturnFalse_WhenDeckDoesNotExist()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		// Act
@@ -94,7 +94,7 @@ public class DeckRepositoryTests
 	public async Task GetDeckByIdAsync_ShouldReturnDeck_WhenExists()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Spanish Deck", "Learning Spanish", Guid.NewGuid(), "EN", "ES");
@@ -115,7 +115,7 @@ public class DeckRepositoryTests
 	public async Task GetDeckByIdAsync_ShouldReturnNull_WhenDeckDoesNotExist()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		// Act
@@ -130,7 +130,7 @@ public class DeckRepositoryTests
 	public async Task GetDecksByUserIdAsync_ShouldReturnDecks_WhenUserHasDecks()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var userId = Guid.NewGuid();
@@ -157,7 +157,7 @@ public class DeckRepositoryTests
 	public async Task GetDecksByUserIdAsync_ShouldReturnEmptyList_WhenUserHasNoDecks()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var userId = Guid.NewGuid();
@@ -175,7 +175,7 @@ public class DeckRepositoryTests
 	public async Task GetDecksByUserIdAsync_ShouldReturnOnlyUserDecks()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var userId1 = Guid.NewGuid();
@@ -203,7 +203,7 @@ public class DeckRepositoryTests
 	public async Task GetDecksByUserIdAsync_ShouldHandleMultipleDecksPerUser()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var userId = Guid.NewGuid();
@@ -236,7 +236,7 @@ public class DeckRepositoryTests
 	public async Task GetCardsAsync_ShouldReturnPaginatedResults()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid(), "EN", "ES");
@@ -263,7 +263,7 @@ public class DeckRepositoryTests
 	public async Task GetCardCountAsync_ShouldReturnCorrectCount()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid(), "EN", "ES");
@@ -275,16 +275,17 @@ public class DeckRepositoryTests
 		await repository.SaveChangesAsync();
 
 		// Act
-		var count = await repository.GetCardCountAsync(deck.Id);
+		var countResult = await repository.GetCardCountAsync(deck.Id);
+		EnsureSuccess(countResult);
 
 		// Assert
-		Assert.Equal(2, count);
+		Assert.Equal(2, countResult.Value);
 	}
 
 	[Fact]
 	public async Task AddCardAsync_ShouldAddCardToDeck()
 	{
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Vocabulary", "Spanish words", Guid.NewGuid(), "EN", "ES");
@@ -305,7 +306,7 @@ public class DeckRepositoryTests
 	public async Task EditCardAsync_ShouldUpdateCardSuccessfully()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid(), "EN", "ES");
@@ -331,7 +332,7 @@ public class DeckRepositoryTests
 	[Fact]
 	public async Task DeleteCardAsync_ShouldReturnTrue_WhenCardExists()
 	{
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Languages", "Learning French", Guid.NewGuid(), "EN", "FR");
@@ -353,7 +354,7 @@ public class DeckRepositoryTests
 	[Fact]
 	public async Task DeleteCardAsync_ShouldReturnFalse_WhenCardDoesNotExist()
 	{
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Practice", "Deck for tests", Guid.NewGuid(), "EN", "IT");
@@ -370,7 +371,7 @@ public class DeckRepositoryTests
 	public async Task GetCardByIdAsync_ShouldReturnCard_WhenExists()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var deck = new Deck(Guid.NewGuid(), "Words", "Deck description", Guid.NewGuid(), "EN", "DE");
@@ -394,7 +395,7 @@ public class DeckRepositoryTests
 	public async Task DeckNameExistsForUser_ShouldReturnTrue_WhenDeckNameExistsForUser()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var userId = Guid.NewGuid();
@@ -405,17 +406,18 @@ public class DeckRepositoryTests
 		await repository.SaveChangesAsync();
 
 		// Act
-		var exists = await repository.DeckNameExistsForUserAsync(deckToTest.Id, name, userId);
+		var existsResult = await repository.DeckNameExistsForUserAsync(deckToTest.Id, name, userId);
 
 		// Assert
-		Assert.True(exists);
+		Assert.True(existsResult.IsSuccess);
+		Assert.True(existsResult.Value);
 	}
 
 	[Fact]
 	public async Task DeckNameExistsForUser_ShouldReturnFalse_WhenDeckNameExistsForOtherUser()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var name = "should be unique";
@@ -425,17 +427,18 @@ public class DeckRepositoryTests
 		await repository.SaveChangesAsync();
 
 		// Act
-		var exists = await repository.DeckNameExistsForUserAsync(deckToTest.Id, name, deckToTest.UserId);
+		var existsResult = await repository.DeckNameExistsForUserAsync(deckToTest.Id, name, deckToTest.UserId);
 
 		// Assert
-		Assert.False(exists);
+		Assert.True(existsResult.IsSuccess);
+		Assert.False(existsResult.Value);
 	}
 
 	[Fact]
 	public async Task DeckNameExistsForUser_ShouldReturnFalse_WhenDeckNameDoesNotExistForUser()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var userId = Guid.NewGuid();
 		var repository = new DeckRepository(dbContext);
 		var deck = new Deck(Guid.NewGuid(), "Existing Deck", "Description", userId, "EN", "ES");
@@ -443,17 +446,18 @@ public class DeckRepositoryTests
 		await repository.SaveChangesAsync();
 
 		// Act
-		var exists = await repository.DeckNameExistsForUserAsync(deck.Id, "Non-Existing Deck", userId);
+		var existsResult = await repository.DeckNameExistsForUserAsync(deck.Id, "Non-Existing Deck", userId);
 
 		// Assert
-		Assert.False(exists);
+		Assert.True(existsResult.IsSuccess);
+		Assert.False(existsResult.Value);
 	}
 
 	[Fact]
 	public async Task DeckNameExistsForUser_ShouldReturnFalse_WhenDeckNameExistsForSameDeck()
 	{
 		// Arrange
-		using var dbContext = TestHelpers.CreateInMemoryDbContext();
+		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
 		var userId = Guid.NewGuid();
@@ -462,13 +466,14 @@ public class DeckRepositoryTests
 		await repository.SaveChangesAsync();
 
 		// Act
-		var exists = await repository.DeckNameExistsForUserAsync(deck.Id, deck.Name, userId);
+		var existsResult = await repository.DeckNameExistsForUserAsync(deck.Id, deck.Name, userId);
 
 		// Assert
-		Assert.False(exists);
+		Assert.True(existsResult.IsSuccess);
+		Assert.False(existsResult.Value);
 	}
 
-	private static void EnsureSuccess(Result result)
+	private static void EnsureSuccess(IResult result)
 	{
 		Assert.True(result.IsSuccess, result.ErrorMessage);
 	}

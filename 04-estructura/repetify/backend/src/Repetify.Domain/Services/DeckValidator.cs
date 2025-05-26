@@ -1,7 +1,7 @@
-﻿using Repetify.Domain.Abstractions.Repositories;
+﻿using Repetify.Crosscutting;
+using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Abstractions.Services;
 using Repetify.Domain.Entities;
-using Repetify.Domain.Exceptions;
 
 namespace Repetify.Domain.Services;
 
@@ -22,9 +22,9 @@ public class DeckValidator : IDeckValidator
 	}
 
 	/// <inheritdoc/>
-	public async Task EnsureIsValid(Deck deck)
+	public async Task<Result> EnsureIsValid(Deck deck)
 	{
-		await EnsureNameIsUnique(deck).ConfigureAwait(false);
+		return await EnsureNameIsUnique(deck).ConfigureAwait(false);
 	}
 
 	/// <summary>
@@ -33,14 +33,17 @@ public class DeckValidator : IDeckValidator
 	/// <param name="deck">The deck to validate.</param>
 	/// <returns>A task that represents the asynchronous operation.</returns>
 	/// <exception cref="ArgumentNullException">Thrown when the deck is null.</exception>
-	/// <exception cref="EntityExistsException">Thrown when a deck with the same name already exists for the user.</exception>
-	private async Task EnsureNameIsUnique(Deck deck)
+	private async Task<Result> EnsureNameIsUnique(Deck deck)
 	{
 		ArgumentNullException.ThrowIfNull(deck);
 
-		if (await _deckRepository.DeckNameExistsForUserAsync(deck.Id, deck.Name, deck.UserId).ConfigureAwait(false))
+		var result = await _deckRepository.DeckNameExistsForUserAsync(deck.Id, deck.Name, deck.UserId).ConfigureAwait(false);
+		if (!result.IsSuccess)
 		{
-			throw new EntityExistsException("Deck", "Name", deck.Name);
+			return ResultFactory.PropagateFailure(result);
 		}
+		
+		return result.Value ? ResultFactory.Conflict($"A deck with the name '{deck.Name}' already exists for this user.")
+			: ResultFactory.Success();
 	}
 }

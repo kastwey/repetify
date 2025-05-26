@@ -1,4 +1,5 @@
-﻿using Repetify.Domain.Entities;
+﻿using Repetify.Crosscutting;
+using Repetify.Domain.Entities;
 
 namespace Repetify.Domain.Abstractions.Services;
 
@@ -13,5 +14,5 @@ public interface IDeckValidator
 	/// </summary>
 	/// <param name="deck">The deck to validate.</param>
 	/// <returns>A task that represents the asynchronous operation.</returns>
-	Task EnsureIsValid(Deck deck);
+	Task<Result> EnsureIsValid(Deck deck);
 }

@@ -1,10 +1,10 @@
 ﻿using Repetify.Application.Dtos;
-using Repetify.Application.Extensions.Mappings;
+using Repetify.Application.Extensions.Mappers;
 using Repetify.Domain.Entities;
 
 using Xunit;
 
-namespace Repetify.Application.Tests.Extensions.Mappings;
+namespace Repetify.Application.UnitTests.Extensions.Mappers;
 
 public class DeckExtensionsTests
 {
@@ -103,44 +103,6 @@ public class DeckExtensionsTests
 
 	#endregion
 
-	#region ToEntity(DeckDto)
-
-	[Fact]
-	public void ToEntity_ShouldReturnDeck_WhenDeckDtoIsValid()
-	{
-		// Arrange
-		var deckDto = new DeckDto(
-			id: Guid.NewGuid(),
-			name: "DTO Deck",
-			description: "DTO Description",
-			userId: Guid.NewGuid(),
-			originalLanguage: "English",
-			translatedLanguage: "Spanish"
-		);
-
-		// Act
-		var result = deckDto.ToEntity();
-
-		// Assert
-		Assert.NotNull(result);
-		Assert.Equal(deckDto.Name, result.Name);
-		Assert.Equal(deckDto.Description, result.Description);
-		Assert.Equal(deckDto.UserId, result.UserId);
-		Assert.Equal(deckDto.OriginalLanguage, result.OriginalLanguage);
-		Assert.Equal(deckDto.TranslatedLanguage, result.TranslatedLanguage);
-	}
-
-	[Fact]
-	public void ToEntity_ShouldThrowArgumentNullException_WhenDeckDtoIsNull()
-	{
-		// Arrange
-		DeckDto deckDto = null!;
-
-		// Act & Assert
-		Assert.Throws<ArgumentNullException>(() => deckDto.ToEntity());
-	}
-
-	#endregion
 
 	#region ToEntity(AddOrUpdateDeckDto, Guid)
 
@@ -149,6 +111,8 @@ public class DeckExtensionsTests
 	{
 		// Arrange
 		var userId = Guid.NewGuid();
+		var deckId = Guid.NewGuid();
+
 		var dto = new AddOrUpdateDeckDto { 
 			Name = "New Deck",
 			Description = "New Description",
@@ -157,10 +121,11 @@ public class DeckExtensionsTests
 		};
 
 		// Act
-		var result = dto.ToEntity(userId);
+		var result = dto.ToEntity(userId, deckId);
 
 		// Assert
 		Assert.NotNull(result);
+		Assert.Equal(deckId, result.Id);
 		Assert.Equal(dto.Name, result.Name);
 		Assert.Equal(dto.Description, result.Description);
 		Assert.Equal(userId, result.UserId);
@@ -176,7 +141,7 @@ public class DeckExtensionsTests
 		var userId = Guid.NewGuid();
 
 		// Act & Assert
-		Assert.Throws<ArgumentNullException>(() => dto.ToEntity(userId));
+		Assert.Throws<ArgumentNullException>(() => dto.ToEntity(userId, null));
 	}
 
 	#endregion

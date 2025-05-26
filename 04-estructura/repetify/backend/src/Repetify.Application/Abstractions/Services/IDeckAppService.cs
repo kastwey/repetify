@@ -19,10 +19,11 @@ public interface IDeckAppService
 	/// <summary>
 	/// Updates an existing deck.
 	/// </summary>
+	/// <param name="deckId">The Id of the deck to be updated</param>
 	/// <param name="deck">The deck DTO containing updated information.</param>
 	/// <param name="userId">The ID of the user to whom this deck belongs.</param>
 	/// <returns>A task representing the asynchronous operation.</returns>
-	Task<Result> UpdateDeckAsync(AddOrUpdateDeckDto deck, Guid userId);
+	Task<Result> UpdateDeckAsync(Guid deckId, AddOrUpdateDeckDto deck, Guid userId);
 
 	/// <summary>
 	/// Deletes the specified deck.

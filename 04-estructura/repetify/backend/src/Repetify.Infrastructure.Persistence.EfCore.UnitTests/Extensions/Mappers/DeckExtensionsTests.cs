@@ -4,7 +4,7 @@ using Repetify.Domain.Entities;
 using Repetify.Infrastructure.Persistence.EfCore.Entities;
 using Repetify.Infrastructure.Persistence.EfCore.Extensions.Mappers;
 
-namespace Repetify.Infrastructure.Persistence.EfCore.Tests.Extensions.Mappers;
+namespace Repetify.Infrastructure.Persistence.EfCore.UnitTests.Extensions.Mappers;
 
 public class DeckExtensionsTests
 {

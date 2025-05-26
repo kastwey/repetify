@@ -1,8 +1,8 @@
 ﻿using Moq;
 
+using Repetify.Crosscutting;
 using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Entities;
-using Repetify.Domain.Exceptions;
 using Repetify.Domain.Services;
 
 namespace Repetify.Domain.Tests;
@@ -23,13 +23,13 @@ public class DeckValidatorTests
 	}
 
 	[Fact]
-	public async Task EnsureIsValid_ShouldThrowEntityExistsException_WhenDeckNameExistsForUser()
+	public async Task EnsureIsValid_ShouldReturnConflictResult_WhenDeckNameExistsForUser()
 	{
 		// Arrange
 		var mockDeckRepository = new Mock<IDeckRepository>();
 		mockDeckRepository
 			.Setup(repo => repo.DeckNameExistsForUserAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<Guid>()))
-			.ReturnsAsync(true);
+			.ReturnsAsync(ResultFactory.Success(true));
 
 		var validator = new DeckValidator(mockDeckRepository.Object);
 
@@ -41,20 +41,22 @@ public class DeckValidatorTests
 			translatedLanguage: "Spanish"
 		);
 
-		// Act & Assert
-		await Assert.ThrowsAsync<EntityExistsException>(
-			() => validator.EnsureIsValid(deck)
-		);
+		// Act
+		var result = await validator.EnsureIsValid(deck);
+
+		// Assert
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.Conflict, result.Status);
 	}
 
 	[Fact]
-	public async Task EnsureIsValid_ShouldNotThrow_WhenDeckNameIsUnique()
+	public async Task EnsureIsValid_ShouldReturnsSuccessResult_WhenDeckNameIsUnique()
 	{
 		// Arrange
 		var mockDeckRepository = new Mock<IDeckRepository>();
 		mockDeckRepository
 			.Setup(repo => repo.DeckNameExistsForUserAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<Guid>()))
-			.ReturnsAsync(false);
+			.ReturnsAsync(ResultFactory.Success(false));
 
 		var validator = new DeckValidator(mockDeckRepository.Object);
 
@@ -66,11 +68,9 @@ public class DeckValidatorTests
 			translatedLanguage: "Spanish"
 		);
 
-		// Act & Assert
-		var exception = await Record.ExceptionAsync(
-			() => validator.EnsureIsValid(deck)
-		);
-
-		Assert.Null(exception); // A null exception means no error was thrown
+		// Act
+		var result = await validator.EnsureIsValid(deck);
+		// assert
+		Assert.True(result.IsSuccess, "Expected validation to succeed for a unique deck name.");
 	}
 }

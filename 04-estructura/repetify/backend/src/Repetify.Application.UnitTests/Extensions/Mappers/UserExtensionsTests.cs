@@ -1,10 +1,10 @@
 ﻿using Repetify.Application.Dtos;
-using Repetify.Application.Extensions.Mappings;
+using Repetify.Application.Extensions.Mappers;
 using Repetify.Domain.Entities;
 
 using Xunit;
 
-namespace Repetify.Application.Tests.Extensions.Mappings;
+namespace Repetify.Application.UnitTests.Extensions.Mappers;
 
 public class UserExtensionsTests
 {
@@ -92,7 +92,7 @@ public class UserExtensionsTests
 	public void ToEntity_WithAddOrEditUserDto_ShouldConvertToUser()
 	{
 		// Arrange  
-		var addOrEditUserDto = new AddOrEditUserDto
+		var addOrEditUserDto = new AddOrUpdateUserDto
 		{
 			Username = "TestUser",
 			Email = "test@example.com"

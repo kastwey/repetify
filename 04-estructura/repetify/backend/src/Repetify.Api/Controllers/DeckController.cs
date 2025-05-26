@@ -70,7 +70,7 @@ public class DeckController : ControllerBase
 		ArgumentNullException.ThrowIfNull(deck);
 
 		var userId = await GetCurrentUserAsync().ConfigureAwait(false);
-		var result = await _deckAppService.UpdateDeckAsync(deck, userId).ConfigureAwait(false);
+		var result = await _deckAppService.UpdateDeckAsync(deckId, deck, userId).ConfigureAwait(false);
 		return result.ToActionResult(() => NoContent());
 	}
 

@@ -1,7 +1,7 @@
 ﻿using Repetify.Application.Dtos;
 using Repetify.Domain.Entities;
 
-namespace Repetify.Application.Extensions.Mappings;
+namespace Repetify.Application.Extensions.Mappers;
 
 /// <summary>
 /// Extension methods for converting Card domain entities to CardDto objects and vice versa.

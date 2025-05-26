@@ -1,10 +1,9 @@
 ﻿using Repetify.Application.Abstractions.Services;
 using Repetify.Application.Dtos;
-using Repetify.Application.Extensions.Mappings;
+using Repetify.Application.Extensions.Mappers;
 using Repetify.Crosscutting;
 using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Abstractions.Services;
-using Repetify.Domain.Exceptions;
 
 namespace Repetify.Application.Services;
 
@@ -36,40 +35,42 @@ public class DeckAppService : IDeckAppService
 	///  <inheritdoc/>
 	public async Task<Result<Guid>> AddDeckAsync(AddOrUpdateDeckDto deck, Guid userId)
 	{
-		try
+		var deckDomain = deck.ToEntity(userId);
+		var result = await _deckValidator.EnsureIsValid(deckDomain).ConfigureAwait(false);
+		if (!result.IsSuccess)
 		{
-			var deckDomain = deck.ToEntity(userId);
-			await _deckValidator.EnsureIsValid(deckDomain).ConfigureAwait(false);
-			await _deckRepository.AddDeckAsync(deckDomain).ConfigureAwait(false);
-			await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
-			return ResultFactory.Success(deckDomain.Id);
+			return ResultFactory.PropagateFailure<Guid>(result);
 		}
-		catch (EntityExistsException ex)
+
+		var addResult = await _deckRepository.AddDeckAsync(deckDomain).ConfigureAwait(false);
+		if (!addResult.IsSuccess)
 		{
-			return ResultFactory.Conflict<Guid>(ex.Message);
+			return ResultFactory.PropagateFailure<Guid>(addResult);
 		}
+
+		await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
+		return ResultFactory.Success(deckDomain.Id);
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result> UpdateDeckAsync(AddOrUpdateDeckDto deck, Guid userId)
+	public async Task<Result> UpdateDeckAsync(Guid deckId, AddOrUpdateDeckDto deck, Guid userId)
 	{
-		try
-		{
-			var deckDomain = deck.ToEntity(userId);
-			await _deckValidator.EnsureIsValid(deckDomain).ConfigureAwait(false);
-			var updateResult = await _deckRepository.UpdateDeckAsync(deckDomain).ConfigureAwait(false);
-			if (!updateResult.IsSuccess)
-			{
-				return updateResult;
-			}
+		var deckDomain = deck.ToEntity(userId, deckId);
+		var validatorResult = await _deckValidator.EnsureIsValid(deckDomain).ConfigureAwait(false);
 
-			await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
-			return ResultFactory.Success();
-		}
-		catch (EntityExistsException ex)
+		if (!validatorResult.IsSuccess)
 		{
-			return ResultFactory.Conflict(ex.Message);
+			return ResultFactory.PropagateFailure(validatorResult);
 		}
+
+		var updateResult = await _deckRepository.UpdateDeckAsync(deckDomain).ConfigureAwait(false);
+		if (!updateResult.IsSuccess)
+		{
+			return updateResult;
+		}
+
+		await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
+		return ResultFactory.Success();
 	}
 
 	///  <inheritdoc/>
@@ -93,7 +94,7 @@ public class DeckAppService : IDeckAppService
 		{
 			return ResultFactory.PropagateFailure<DeckDto>(deckResult);
 		}
-		
+
 		return ResultFactory.Success(deckResult.Value.ToDto());
 	}
 
@@ -143,11 +144,11 @@ public class DeckAppService : IDeckAppService
 	public async Task<Result<CardDto>> GetCardByIdAsync(Guid deckId, Guid cardId)
 	{
 		var cardResult = await _deckRepository.GetCardByIdAsync(deckId, cardId).ConfigureAwait(false);
-		if (!cardResult .IsSuccess)
+		if (!cardResult.IsSuccess)
 		{
 			return ResultFactory.PropagateFailure<CardDto>(cardResult);
 		}
-		
+
 		return ResultFactory.Success(cardResult.Value.ToDto());
 	}
 
@@ -166,8 +167,7 @@ public class DeckAppService : IDeckAppService
 	///  <inheritdoc/>
 	public async Task<Result<int>> GetCardCountAsync(Guid deckId)
 	{
-		int count = await _deckRepository.GetCardCountAsync(deckId).ConfigureAwait(false);
-		return ResultFactory.Success(count);
+		return await _deckRepository.GetCardCountAsync(deckId).ConfigureAwait(false);
 	}
 
 	///  <inheritdoc/>
@@ -183,7 +183,7 @@ public class DeckAppService : IDeckAppService
 		{
 			return ResultFactory.PropagateFailure<CardsToReviewDto>(cardsResult);
 		}
-		
+
 		return ResultFactory.Success(new CardsToReviewDto { Cards = cardsResult.Value.Cards.ToDtoList(), Count = cardsResult.Value.Count });
 	}
 
@@ -195,7 +195,7 @@ public class DeckAppService : IDeckAppService
 		{
 			return ResultFactory.PropagateFailure(cardResult);
 		}
-		
+
 		_cardReviewService.UpdateReview(cardResult.Value, isCorrect);
 		await _deckRepository.UpdateCardAsync(cardResult.Value).ConfigureAwait(false);
 		await _deckRepository.SaveChangesAsync().ConfigureAwait(false);

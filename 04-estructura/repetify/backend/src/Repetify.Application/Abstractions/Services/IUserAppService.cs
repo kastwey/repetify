@@ -20,7 +20,7 @@ public interface IUserAppService
 	/// </summary>
 	/// <param name="user">The user data to add.</param>
 	/// <returns>A <see cref="Result{T}"/> containing the ID of the newly created user, or an appropriate error status.</returns>
-	Task<Result<Guid>> AddUserAsync(AddOrEditUserDto user);
+	Task<Result<Guid>> AddUserAsync(AddOrUpdateUserDto user);
 
 	/// <summary>
 	/// Edits an existing user's data.
@@ -28,7 +28,7 @@ public interface IUserAppService
 	/// <param name="user">The updated user data.</param>
 	/// <param name="userId">The user identifier corresponding to the user to be updated</param>
 	/// <returns>A <see cref="Result"/> indicating the success or failure of the operation.</returns>
-	Task<Result> UpdateUserAsync(AddOrEditUserDto user, Guid userId);
+	Task<Result> UpdateUserAsync(AddOrUpdateUserDto user, Guid userId);
 
 	/// <summary>
 	/// Deletes a user from the system.

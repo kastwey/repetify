@@ -1,8 +1,8 @@
 ﻿using Moq;
 
+using Repetify.Crosscutting;
 using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Entities;
-using Repetify.Domain.Exceptions;
 using Repetify.Domain.Services;
 
 namespace Repetify.Domain.Tests.Services;
@@ -24,35 +24,51 @@ public class UserValidatorTests
 		// Arrange  
 		var user = new User(Guid.NewGuid(), "ValidUsername", "validemail@example.com");
 		_userRepositoryMock.Setup(repo => repo.EmailAlreadyExistsAsync(user.Id, user.Email))
-			.ReturnsAsync(false);
+			.ReturnsAsync(ResultFactory.Success(false));
 		_userRepositoryMock.Setup(repo => repo.UsernameAlreadyExistsAsync(user.Id, user.Username))
-			.ReturnsAsync(false);
+			.ReturnsAsync(ResultFactory.Success(false));
 
-		// Act & Assert  
-		await _userValidator.EnsureIsValid(user);
+		// Act
+		var validatorResult = await _userValidator.EnsureIsValid(user);
+
+		// assert
+		Assert.True(validatorResult.IsSuccess);
 	}
 
 	[Fact]
-	public async Task EnsureIsValid_ShouldThrowEntityExistsException_WhenEmailAlreadyExists()
+	public async Task EnsureIsValid_ShouldReturnConflictResult_WhenEmailAlreadyExists()
 	{
 		// Arrange  
-		var user = new User(Guid.NewGuid(), "ValidUsername", "duplicateemail@example.com");
+		var user = new User(Guid.NewGuid(), "testUser", "test@test.net");
 		_userRepositoryMock.Setup(repo => repo.EmailAlreadyExistsAsync(user.Id, user.Email))
-			.ReturnsAsync(true);
+			.ReturnsAsync(ResultFactory.Success<bool>(true));
+		_userRepositoryMock.Setup(repo => repo.UsernameAlreadyExistsAsync(user.Id, user.Username))
+			.ReturnsAsync(ResultFactory.Success<bool>(false));
 
-		// Act & Assert  
-		await Assert.ThrowsAsync<EntityExistsException>(() => _userValidator.EnsureIsValid(user));
+		// Act
+		var validatorResult = await _userValidator.EnsureIsValid(user);
+
+		// Assert
+		Assert.Equal(ResultStatus.Conflict, validatorResult.Status);
+		Assert.Equal($"A user with the email {user.Email} already exists.", validatorResult.ErrorMessage);
 	}
 
 	[Fact]
-	public async Task EnsureIsValid_ShouldThrowEntityExistsException_WhenUsernameAlreadyExists()
+	public async Task EnsureIsValid_ShouldReturnConflictResult_WhenUsernameAlreadyExists()
 	{
 		// Arrange  
 		var user = new User(Guid.NewGuid(), "DuplicateUsername", "validemail@example.com");
-		_userRepositoryMock.Setup(repo => repo.UsernameAlreadyExistsAsync(user.Id, user.Username))
-			.ReturnsAsync(true);
 
-		// Act & Assert  
-		await Assert.ThrowsAsync<EntityExistsException>(() => _userValidator.EnsureIsValid(user));
+		_userRepositoryMock.Setup(repo => repo.UsernameAlreadyExistsAsync(user.Id, user.Username))
+			.ReturnsAsync(ResultFactory.Success<bool>(true));
+		_userRepositoryMock.Setup(repo => repo.EmailAlreadyExistsAsync(user.Id, user.Email))
+			.ReturnsAsync(ResultFactory.Success<bool>(false));
+
+
+		// Act
+		var validatorResult = await _userValidator.EnsureIsValid(user);
+
+		// Assert
+		Assert.Equal(ResultStatus.Conflict, validatorResult.Status);
 	}
 }

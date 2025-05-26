@@ -1,11 +1,10 @@
 ﻿using Repetify.Application.Abstractions.Services;
 using Repetify.Application.Dtos;
-using Repetify.Application.Extensions.Mappings;
+using Repetify.Application.Extensions.Mappers;
 using Repetify.Crosscutting;
 using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Abstractions.Services;
 using Repetify.Domain.Entities;
-using Repetify.Domain.Exceptions;
 using Repetify.Domain.Services;
 
 using System;
@@ -28,20 +27,23 @@ public class UserAppService : IUserAppService
 		_userValidator = validator;
 	}
 
-	public async Task<Result<Guid>> AddUserAsync(AddOrEditUserDto user)
+	public async Task<Result<Guid>> AddUserAsync(AddOrUpdateUserDto user)
 	{
-		try
+		var userDomain = user.ToEntity();
+		var validatorResult = await _userValidator.EnsureIsValid(userDomain).ConfigureAwait(false);
+		if (!validatorResult.IsSuccess)
 		{
-			var userDomain = user.ToEntity();
-			await _userValidator.EnsureIsValid(userDomain).ConfigureAwait(false);
-			await _userRepository.AddUserAsync(userDomain).ConfigureAwait(false);
-			await _userRepository.SaveChangesAsync().ConfigureAwait(false);
-			return ResultFactory.Success(userDomain.Id);
+			return ResultFactory.PropagateFailure<Guid>(validatorResult);
 		}
-		catch (EntityExistsException ex)
+
+		var addUserResult = await _userRepository.AddUserAsync(userDomain).ConfigureAwait(false);
+		if (!addUserResult.IsSuccess)
 		{
-			return ResultFactory.Conflict<Guid>(ex.Message);
+			return ResultFactory.PropagateFailure<Guid>(addUserResult);
 		}
+
+		await _userRepository.SaveChangesAsync().ConfigureAwait(false);
+		return ResultFactory.Success(userDomain.Id);
 	}
 
 	public async Task<Result> DeleteUserAsync(Guid userId)
@@ -55,20 +57,23 @@ public class UserAppService : IUserAppService
 		return deletedResult;
 	}
 
-	public async Task<Result> UpdateUserAsync(AddOrEditUserDto user, Guid userId)
+	public async Task<Result> UpdateUserAsync(AddOrUpdateUserDto user, Guid userId)
 	{
-		try
+		var userDomain = user.ToEntity(userId);
+		var validatorResult = await _userValidator.EnsureIsValid(userDomain).ConfigureAwait(false);
+		if (!validatorResult.IsSuccess)
 		{
-			var userDomain = user.ToEntity(userId);
-			await _userValidator.EnsureIsValid(userDomain).ConfigureAwait(false);
-			await _userRepository.UpdateUserAsync(userDomain).ConfigureAwait(false);
-			await _userRepository.SaveChangesAsync().ConfigureAwait(false);
-			return ResultFactory.Success();
+			return ResultFactory.PropagateFailure(validatorResult);
 		}
-		catch (EntityExistsException ex)
+		
+		var updateUserResult = await _userRepository.UpdateUserAsync(userDomain).ConfigureAwait(false);
+		if (!updateUserResult.IsSuccess)
 		{
-			return ResultFactory.Conflict(ex.Message);
+			return ResultFactory.PropagateFailure(updateUserResult);
 		}
+		
+		await _userRepository.SaveChangesAsync().ConfigureAwait(false);
+		return ResultFactory.Success();
 	}
 
 	public async Task<Result<UserDto>> GetUserByEmailAsync(string email)

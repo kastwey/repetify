@@ -104,6 +104,7 @@ public class Card
 		DeckId = deckId;
 		OriginalWord = originalWord;
 		TranslatedWord = translatedWord;
+		CorrectReviewStreak = correctReviewStreak;
 		NextReviewDate = nextReviewDate;
 		PreviousCorrectReview = previousCorrectReview;
 	}
@@ -114,7 +115,7 @@ public class Card
 	/// <param name="nextReviewDate">The date and time when the card is next due for review.</param>
 	/// <param name="currentDate">The current date and time, used for validation. Defaults to the current UTC time if not provided.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="nextReviewDate"/> is in the past relative to <paramref name="currentDate"/>.</exception>
-	public void SetNextReviewDate(DateTime nextReviewDate, DateTime? currentDate = null)
+	 public void SetNextReviewDate(DateTime nextReviewDate, DateTime? currentDate = null)
 	{
 		currentDate ??= DateTime.UtcNow;
 

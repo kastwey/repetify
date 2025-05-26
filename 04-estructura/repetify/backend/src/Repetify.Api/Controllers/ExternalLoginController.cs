@@ -123,7 +123,7 @@ public class ExternalLoginController(IJwtService jwtService, IGoogleOauthService
 
 		if (!userResult.IsSuccess)
 		{
-			var newUser = new AddOrEditUserDto { Username = username, Email = email };
+			var newUser = new AddOrUpdateUserDto { Username = username, Email = email };
 			await _userAppService.AddUserAsync(newUser).ConfigureAwait(false);
 		}
 	}

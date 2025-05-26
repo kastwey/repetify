@@ -1,7 +1,7 @@
-﻿using Repetify.Domain.Abstractions.Repositories;
+﻿using Repetify.Crosscutting;
+using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Abstractions.Services;
 using Repetify.Domain.Entities;
-using Repetify.Domain.Exceptions;
 
 namespace Repetify.Domain.Services;
 
@@ -22,29 +22,48 @@ public class UserValidator : IUserValidator
 	}
 
 	/// <inheritdoc/>
-	public async Task EnsureIsValid(User user)
+	public async Task<Result> EnsureIsValid(User user)
 	{
-		await EnsureEmailIsUnique(user).ConfigureAwait(false);
-		await EnsureUsernameIsUnique(user).ConfigureAwait(false);
+		Result[] results = [
+			await EnsureUsernameIsUnique(user).ConfigureAwait(false),
+			await EnsureEmailIsUnique(user).ConfigureAwait(false)];
+		var errorMessages = results
+			.Where(r => !r.IsSuccess)
+			.Select(r => r.ErrorMessage);
+
+		if (errorMessages.Any())
+		{
+			return ResultFactory.Conflict(string.Join(Environment.NewLine, errorMessages));
+		}
+		
+		return ResultFactory.Success();
 	}
 
-	private async Task EnsureEmailIsUnique(User user)
+	private async Task<Result> EnsureEmailIsUnique(User user)
 	{
 		ArgumentNullException.ThrowIfNull(user);
 
-		if (await _userRepository.EmailAlreadyExistsAsync(user.Id, user.Email).ConfigureAwait(false))
+		var result = await _userRepository.EmailAlreadyExistsAsync(user.Id, user.Email).ConfigureAwait(false);
+		
+		if (!result.IsSuccess)
 		{
-			throw new EntityExistsException("User", "Email", user.Email);
+			return ResultFactory.PropagateFailure(result);
 		}
+		
+		return result.Value ? ResultFactory.Conflict($"A user with the email {user.Email} already exists.")
+			: ResultFactory.Success();
 	}
 
-	private async Task EnsureUsernameIsUnique(User user)
+	private async Task<Result> EnsureUsernameIsUnique(User user)
 	{
 		ArgumentNullException.ThrowIfNull(user);
 
-		if (await _userRepository.UsernameAlreadyExistsAsync(user.Id, user.Username).ConfigureAwait(false))
+		var result = await _userRepository.UsernameAlreadyExistsAsync(user.Id, user.Username).ConfigureAwait(false);
+		if(!result.IsSuccess)
 		{
-			throw new EntityExistsException("User", "Username", user.Username);
+			return ResultFactory.PropagateFailure(result);
 		}
+
+		return result.Value ? ResultFactory.Conflict("The username is already taken.") : ResultFactory.Success();
 	}
 }

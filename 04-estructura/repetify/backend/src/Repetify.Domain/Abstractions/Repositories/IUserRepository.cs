@@ -18,22 +18,22 @@ public interface IUserRepository
 	/// <summary>  
 	/// Checks if an email address already exists in the repository.  
 	/// </summary>  
-	Task<bool> EmailAlreadyExistsAsync(Guid userId, string email);
+	Task<Result<bool>> EmailAlreadyExistsAsync(Guid userId, string email);
 
 	/// <summary>  
 	/// Checks if a username already exists in the repository.  
 	/// </summary>  
-	Task<bool> UsernameAlreadyExistsAsync(Guid userId, string username);
+	Task<Result<bool>> UsernameAlreadyExistsAsync(Guid userId, string username);
 
 	/// <summary>
 	/// Adds a new user to the repository.
 	/// </summary>
-	Task AddUserAsync(User user);
+	Task<Result> AddUserAsync(User user);
 
 	/// <summary>
 	/// Updates an existing user's information in the repository.
 	/// </summary>
-	Task UpdateUserAsync(User user);
+	Task<Result> UpdateUserAsync(User user);
 
 	/// <summary>
 	/// Deletes a user from the repository by their unique identifier.

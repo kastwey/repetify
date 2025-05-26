@@ -61,12 +61,12 @@ public class Deck
 	/// <param name="userId">The unique identifier of the user who owns the deck.</param>
 	/// <param name="originalLanguage">The original language of the deck.</param>
 	/// <param name="translatedLanguage">The translated language of the deck.</param>
-	public Deck(Guid id, string name, string? description, Guid userId, string originalLanguage, string translatedLanguage)
+	public Deck(Guid? id, string name, string? description, Guid userId, string originalLanguage, string translatedLanguage)
 	{
 		ArgumentException.ThrowIfNullOrWhiteSpace(name);
 		ArgumentException.ThrowIfNullOrWhiteSpace(originalLanguage);
 		ArgumentException.ThrowIfNullOrWhiteSpace(translatedLanguage);
-		Id = id;
+		Id = id ?? Guid.NewGuid();
 		Name = name;
 		Description = description;
 		UserId = userId;
