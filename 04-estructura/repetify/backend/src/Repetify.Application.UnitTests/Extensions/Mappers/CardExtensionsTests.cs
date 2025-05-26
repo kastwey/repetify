@@ -107,46 +107,6 @@ public class CardExtensionTests
 
 	#endregion
 
-	#region ToEntity(CardDto)
-
-	[Fact]
-	public void ToEntity_ShouldReturnCard_WhenCardDtoIsValid()
-	{
-		// Arrange
-		var cardDto = new CardDto(
-			id: Guid.NewGuid(),
-			deckId: Guid.NewGuid(),
-			originalWord: "Hola",
-			translatedWord: "Hello",
-			correctReviewStreak: 3,
-			nextReviewDate: DateTime.UtcNow.AddDays(2),
-			previousCorrectReview: DateTime.UtcNow.AddDays(-2)
-		);
-
-		// Act
-		var result = cardDto.ToEntity();
-
-		// Assert
-		Assert.NotNull(result);
-		Assert.Equal(cardDto.DeckId, result.DeckId);
-		Assert.Equal(cardDto.OriginalWord, result.OriginalWord);
-		Assert.Equal(cardDto.TranslatedWord, result.TranslatedWord);
-		Assert.Equal(cardDto.CorrectReviewStreak, result.CorrectReviewStreak);
-		Assert.Equal(cardDto.NextReviewDate, result.NextReviewDate);
-		Assert.Equal(cardDto.PreviousCorrectReview, result.PreviousCorrectReview);
-	}
-
-	[Fact]
-	public void ToEntity_ShouldThrowArgumentNullException_WhenCardDtoIsNull()
-	{
-		// Arrange
-		CardDto cardDto = null!;
-
-		// Act & Assert
-		Assert.Throws<ArgumentNullException>(() => cardDto.ToEntity());
-	}
-
-	#endregion
 
 	#region ToEntity(AddOrUpdateCardDto, Guid, Guid?)
 
