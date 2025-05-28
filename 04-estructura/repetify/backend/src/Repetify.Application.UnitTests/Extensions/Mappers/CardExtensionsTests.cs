@@ -107,7 +107,6 @@ public class CardExtensionTests
 
 	#endregion
 
-
 	#region ToEntity(AddOrUpdateCardDto, Guid, Guid?)
 
 	[Fact]

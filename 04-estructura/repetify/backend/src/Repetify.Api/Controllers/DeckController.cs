@@ -83,8 +83,8 @@ public class DeckController : ControllerBase
 	public async Task<IActionResult> DeleteDeck(Guid deckId)
 	{
 		// The service returns Result<bool>
-		var result = await _deckAppService.DeleteDeckAsync(deckId).ConfigureAwait(false);
-		return result.ToActionResult(deleted => deleted ? NoContent() : NotFound());
+		var result = await _deckAppService.DeleteDeckAsync(deckId, await GetCurrentUserAsync().ConfigureAwait(false)).ConfigureAwait(false);
+		return result.ToActionResult(() => NoContent());
 	}
 
 	/// <summary>
@@ -96,7 +96,7 @@ public class DeckController : ControllerBase
 	public async Task<IActionResult> GetDeckById(Guid deckId)
 	{
 		// The service returns Result<DeckDto?>
-		var result = await _deckAppService.GetDeckByIdAsync(deckId).ConfigureAwait(false);
+		var result = await _deckAppService.GetDeckByIdAsync(deckId, await GetCurrentUserAsync().ConfigureAwait(false)).ConfigureAwait(false);
 		return result.ToActionResult(deck => Ok(deck));
 	}
 
@@ -122,7 +122,7 @@ public class DeckController : ControllerBase
 	{
 		ArgumentNullException.ThrowIfNull(card);
 
-		var result = await _deckAppService.AddCardAsync(card, deckId).ConfigureAwait(false);
+		var result = await _deckAppService.AddCardAsync(card, deckId, await GetCurrentUserAsync().ConfigureAwait(false)).ConfigureAwait(false);
 		return result.ToActionResult(cardId =>
 		{
 			var createdCard = new CardDto(
@@ -143,7 +143,7 @@ public class DeckController : ControllerBase
 	[HttpPut("{deckId}/cards/{cardId}")]
 	public async Task<IActionResult> UpdateCard([FromRoute] Guid deckId, [FromRoute] Guid cardId, [FromBody] AddOrUpdateCardDto card)
 	{
-		var result = await _deckAppService.UpdateCardAsync(card, deckId, cardId).ConfigureAwait(false);
+		var result = await _deckAppService.UpdateCardAsync(card, deckId, cardId, await GetCurrentUserAsync().ConfigureAwait(false)).ConfigureAwait(false);
 		return result.ToActionResult(() => NoContent());
 	}
 
@@ -156,7 +156,7 @@ public class DeckController : ControllerBase
 	[HttpDelete("{deckId}/cards/{cardId}")]
 	public async Task<IActionResult> DeleteCard(Guid deckId, Guid cardId)
 	{
-		var result = await _deckAppService.DeleteCardAsync(deckId, cardId).ConfigureAwait(false);
+		var result = await _deckAppService.DeleteCardAsync(deckId, cardId, await GetCurrentUserAsync().ConfigureAwait(false)).ConfigureAwait(false);
 		return result.ToActionResult();
 	}
 
@@ -169,7 +169,7 @@ public class DeckController : ControllerBase
 	[HttpGet("{deckId}/cards/{cardId}")]
 	public async Task<IActionResult> GetCardById(Guid deckId, Guid cardId)
 	{
-		var result = await _deckAppService.GetCardByIdAsync(deckId, cardId).ConfigureAwait(false);
+		var result = await _deckAppService.GetCardByIdAsync(deckId, cardId, await GetCurrentUserAsync().ConfigureAwait(false)).ConfigureAwait(false);
 		return result.ToActionResult(card => Ok(card));
 	}
 
@@ -183,7 +183,7 @@ public class DeckController : ControllerBase
 	[HttpGet("{deckId}/cards")]
 	public async Task<IActionResult> GetCards(Guid deckId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
 	{
-		var result = await _deckAppService.GetCardsAsync(deckId, page, pageSize).ConfigureAwait(false);
+		var result = await _deckAppService.GetCardsAsync(deckId, await GetCurrentUserAsync().ConfigureAwait(false), page, pageSize).ConfigureAwait(false);
 		return result.ToActionResult(cards => Ok(cards));
 	}
 
@@ -195,7 +195,7 @@ public class DeckController : ControllerBase
 	[HttpGet("{deckId}/cards/count")]
 	public async Task<IActionResult> GetCardCount(Guid deckId)
 	{
-		var result = await _deckAppService.GetCardCountAsync(deckId).ConfigureAwait(false);
+		var result = await _deckAppService.GetCardCountAsync(deckId, await GetCurrentUserAsync().ConfigureAwait(false)).ConfigureAwait(false);
 		return result.ToActionResult(count => Ok(count));
 	}
 
@@ -215,7 +215,7 @@ public class DeckController : ControllerBase
 			return BadRequest("Page size must be greater than 0.");
 		}
 
-		var result = await _deckAppService.GetCardsToReview(deckId, until, pageSize, cursor).ConfigureAwait(false);
+		var result = await _deckAppService.GetCardsToReview(deckId, await GetCurrentUserAsync().ConfigureAwait(false), until, pageSize, cursor).ConfigureAwait(false);
 		return result.ToActionResult(cards => Ok(cards));
 	}
 
@@ -229,7 +229,7 @@ public class DeckController : ControllerBase
 	[HttpPost("{deckId}/cards/review/{cardId}")]
 	public async Task<IActionResult> ReviewCard(Guid deckId, Guid cardId, [FromQuery] bool isCorrect)
 	{
-		var result = await _deckAppService.ReviewCardAsync(deckId, cardId, isCorrect).ConfigureAwait(false);
+		var result = await _deckAppService.ReviewCardAsync(deckId, cardId, await GetCurrentUserAsync().ConfigureAwait(false), isCorrect).ConfigureAwait(false);
 		return result.ToActionResult(() => NoContent());
 	}
 

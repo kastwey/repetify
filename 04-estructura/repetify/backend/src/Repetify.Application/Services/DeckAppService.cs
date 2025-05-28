@@ -4,6 +4,8 @@ using Repetify.Application.Extensions.Mappers;
 using Repetify.Crosscutting;
 using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Abstractions.Services;
+using Repetify.Domain.Entities;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Repetify.Application.Services;
 
@@ -55,12 +57,17 @@ public class DeckAppService : IDeckAppService
 	///  <inheritdoc/>
 	public async Task<Result> UpdateDeckAsync(Guid deckId, AddOrUpdateDeckDto deck, Guid userId)
 	{
+		var permissionResult = await CheckUserPermissionAsync(deckId, userId).ConfigureAwait(false);
+		if (!permissionResult.IsSuccess)
+		{
+			return permissionResult;
+		}
+
 		var deckDomain = deck.ToEntity(userId, deckId);
 		var validatorResult = await _deckValidator.EnsureIsValid(deckDomain).ConfigureAwait(false);
-
 		if (!validatorResult.IsSuccess)
 		{
-			return ResultFactory.PropagateFailure(validatorResult);
+			return validatorResult;
 		}
 
 		var updateResult = await _deckRepository.UpdateDeckAsync(deckDomain).ConfigureAwait(false);
@@ -74,25 +81,38 @@ public class DeckAppService : IDeckAppService
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result<bool>> DeleteDeckAsync(Guid deckId)
+	public async Task<Result> DeleteDeckAsync(Guid deckId, Guid userId)
 	{
-		var deleted = await _deckRepository.DeleteDeckAsync(deckId).ConfigureAwait(false);
-		if (deleted.IsSuccess)
+		var permissionResult = await CheckUserPermissionAsync(deckId, userId).ConfigureAwait(false);
+		if (!permissionResult.IsSuccess)
 		{
-			await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
-			return ResultFactory.Success(true);
+			return permissionResult;
 		}
-
-		return ResultFactory.NotFound<bool>("Unable to find the deck to delete.");
+		
+		var deletedResult = await _deckRepository.DeleteDeckAsync(deckId).ConfigureAwait(false);
+		if (!deletedResult.IsSuccess)
+		{
+			return deletedResult;
+		}
+		
+		await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
+		return ResultFactory.Success();
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result<DeckDto>> GetDeckByIdAsync(Guid deckId)
+	[SuppressMessage("Performance", "CA1849:Call async methods when in an async method", Justification = "The CheckPermission method does not require async calls")]
+	public async Task<Result<DeckDto>> GetDeckByIdAsync(Guid deckId, Guid userId)
 	{
 		var deckResult = await _deckRepository.GetDeckByIdAsync(deckId).ConfigureAwait(false);
 		if (!deckResult.IsSuccess)
 		{
 			return ResultFactory.PropagateFailure<DeckDto>(deckResult);
+		}
+
+		var permissionResult = CheckUserPermission(deckResult.Value, userId);
+		if (!permissionResult.IsSuccess)
+		{
+			return ResultFactory.PropagateFailure<DeckDto>(permissionResult);
 		}
 
 		return ResultFactory.Success(deckResult.Value.ToDto());
@@ -111,25 +131,52 @@ public class DeckAppService : IDeckAppService
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result<Guid>> AddCardAsync(AddOrUpdateCardDto card, Guid deckId)
+	public async Task<Result<Guid>> AddCardAsync(AddOrUpdateCardDto card, Guid deckId, Guid userId)
 	{
+		var permissionResult = await CheckUserPermissionAsync(deckId, userId).ConfigureAwait(false);
+		if (!permissionResult.IsSuccess)
+		{
+			return ResultFactory.PropagateFailure<Guid>(permissionResult);
+		}
+
 		var cardDomain = card.ToEntity(deckId);
-		await _deckRepository.AddCardAsync(cardDomain).ConfigureAwait(false);
+		var addResult = await _deckRepository.AddCardAsync(cardDomain).ConfigureAwait(false);
+		if (!addResult.IsSuccess)
+		{
+			return ResultFactory.PropagateFailure<Guid>(addResult);
+		}
+
 		await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
 		return ResultFactory.Success(cardDomain.Id);
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result> UpdateCardAsync(AddOrUpdateCardDto card, Guid deckId, Guid cardId)
+	public async Task<Result> UpdateCardAsync(AddOrUpdateCardDto card, Guid deckId, Guid cardId, Guid userId)
 	{
-		await _deckRepository.UpdateCardAsync(card.ToEntity(deckId, cardId)).ConfigureAwait(false);
+		var permissionResult = await CheckUserPermissionAsync(deckId, userId).ConfigureAwait(false);
+		if (!permissionResult.IsSuccess)
+		{
+			return permissionResult;
+		}
+
+		var updateResult = await _deckRepository.UpdateCardAsync(card.ToEntity(deckId, cardId)).ConfigureAwait(false);
+		if (!updateResult.IsSuccess)
+		{
+			return updateResult;
+		}
 		await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
 		return ResultFactory.Success();
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result> DeleteCardAsync(Guid deckId, Guid cardId)
+	public async Task<Result> DeleteCardAsync(Guid deckId, Guid cardId, Guid userId)
 	{
+		var permissionResult = await CheckUserPermissionAsync(deckId, userId).ConfigureAwait(false);
+		if (!permissionResult.IsSuccess)
+		{
+			return permissionResult;
+		}
+		
 		var deletedResult = await _deckRepository.DeleteCardAsync(deckId, cardId).ConfigureAwait(false);
 		if (deletedResult.IsSuccess)
 		{
@@ -141,8 +188,14 @@ public class DeckAppService : IDeckAppService
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result<CardDto>> GetCardByIdAsync(Guid deckId, Guid cardId)
+	public async Task<Result<CardDto>> GetCardByIdAsync(Guid deckId, Guid cardId, Guid userId)
 	{
+		var permissionResult = await CheckUserPermissionAsync(deckId, userId).ConfigureAwait(false);
+		if (!permissionResult.IsSuccess)
+		{
+			return ResultFactory.PropagateFailure<CardDto>(permissionResult);
+		}
+		
 		var cardResult = await _deckRepository.GetCardByIdAsync(deckId, cardId).ConfigureAwait(false);
 		if (!cardResult.IsSuccess)
 		{
@@ -153,8 +206,14 @@ public class DeckAppService : IDeckAppService
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result<IEnumerable<CardDto>>> GetCardsAsync(Guid deckId, int page, int pageSize)
+	public async Task<Result<IEnumerable<CardDto>>> GetCardsAsync(Guid deckId, Guid userId, int page, int pageSize)
 	{
+		var permissionResult = await CheckUserPermissionAsync(deckId, userId).ConfigureAwait(false);
+		if (!permissionResult.IsSuccess)
+		{
+			return ResultFactory.PropagateFailure<IEnumerable<CardDto>>(permissionResult);
+		}
+
 		var cardsResult = await _deckRepository.GetCardsAsync(deckId, page, pageSize).ConfigureAwait(false);
 		if (!cardsResult.IsSuccess)
 		{
@@ -165,17 +224,29 @@ public class DeckAppService : IDeckAppService
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result<int>> GetCardCountAsync(Guid deckId)
+	public async Task<Result<int>> GetCardCountAsync(Guid deckId, Guid userId)
 	{
+		var permissionResult = await CheckUserPermissionAsync(deckId, userId).ConfigureAwait(false);
+		if (!permissionResult.IsSuccess)
+		{
+			return ResultFactory.PropagateFailure<int>(permissionResult);
+		}
+
 		return await _deckRepository.GetCardCountAsync(deckId).ConfigureAwait(false);
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result<CardsToReviewDto>> GetCardsToReview(Guid deckId, DateTime until, int pageSize, DateTime? cursor)
+	public async Task<Result<CardsToReviewDto>> GetCardsToReview(Guid deckId, Guid userId, DateTime until, int pageSize, DateTime? cursor)
 	{
+		var permissionResult = await CheckUserPermissionAsync(deckId, userId).ConfigureAwait(false);
 		if (pageSize < 1)
 		{
 			return ResultFactory.InvalidArgument<CardsToReviewDto>("The page number must be greater than 0.");
+		}
+
+		if (!permissionResult.IsSuccess)
+		{
+			return ResultFactory.PropagateFailure<CardsToReviewDto>(permissionResult);
 		}
 
 		var cardsResult = await _deckRepository.GetCardsToReview(deckId, until, pageSize, cursor).ConfigureAwait(false);
@@ -188,8 +259,14 @@ public class DeckAppService : IDeckAppService
 	}
 
 	///  <inheritdoc/>
-	public async Task<Result> ReviewCardAsync(Guid deckId, Guid cardId, bool isCorrect)
+	public async Task<Result> ReviewCardAsync(Guid deckId, Guid cardId, Guid userId, bool isCorrect)
 	{
+		var permissionResult = await CheckUserPermissionAsync(deckId, userId).ConfigureAwait(false);
+		if (!permissionResult.IsSuccess)
+		{
+			return permissionResult;
+		}
+
 		var cardResult = await _deckRepository.GetCardByIdAsync(deckId, cardId).ConfigureAwait(false);
 		if (!cardResult.IsSuccess)
 		{
@@ -197,8 +274,31 @@ public class DeckAppService : IDeckAppService
 		}
 
 		_cardReviewService.UpdateReview(cardResult.Value, isCorrect);
-		await _deckRepository.UpdateCardAsync(cardResult.Value).ConfigureAwait(false);
+		var updateResult = await _deckRepository.UpdateCardAsync(cardResult.Value).ConfigureAwait(false);
+		if (!updateResult.IsSuccess)
+		{
+			return updateResult;
+		}
+
 		await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
 		return ResultFactory.Success();
+	}
+
+	private async Task<Result> CheckUserPermissionAsync(Guid deckId, Guid userId)
+	{
+		var deckResult = await _deckRepository.GetDeckByIdAsync(deckId).ConfigureAwait(false);
+		if (!deckResult.IsSuccess)
+		{
+			return ResultFactory.PropagateFailure(deckResult);
+		}
+
+		return CheckUserPermission(deckResult.Value, userId);
+	}
+
+	private static Result CheckUserPermission(Deck deck, Guid userId)
+	{
+		return deck.UserId == userId ?
+					ResultFactory.Success() :
+					ResultFactory.NotFound($"Unable to find a deck with Id {deck.Id}");
 	}
 }

@@ -1,8 +1,11 @@
-﻿using FluentAssertions;
-using FluentAssertions.Specialized;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 using Moq;
 
+using Repetify.Application.Abstractions.Services;
 using Repetify.Application.Dtos;
 using Repetify.Application.Services;
 using Repetify.Crosscutting;
@@ -10,236 +13,508 @@ using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Abstractions.Services;
 using Repetify.Domain.Entities;
 
+using Xunit;
+
 namespace Repetify.Application.UnitTests.Services;
 
 public class DeckAppServiceTests
 {
-	private readonly Mock<IDeckValidator> _deckValidatorMock;
-	private readonly Mock<IDeckRepository> _deckRepositoryMock;
-	private readonly Mock<ICardReviewService> _reviewCardServiceMock;
-	private readonly DeckAppService _deckAppService;
+	private readonly Mock<IDeckValidator> _deckValidatorMock = new();
+	private readonly Mock<ICardReviewService> _cardReviewServiceMock = new();
+	private readonly Mock<IDeckRepository> _deckRepositoryMock = new();
+	private readonly DeckAppService _service;
+
+	private readonly Guid _userId = Guid.NewGuid();
+	private readonly Guid _deckId = Guid.NewGuid();
+	private readonly Guid _cardId = Guid.NewGuid();
 
 	public DeckAppServiceTests()
 	{
-		_deckValidatorMock = new Mock<IDeckValidator>();
-		_reviewCardServiceMock = new Mock<ICardReviewService>();
-		_deckValidatorMock.Setup(m => m.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
-		_deckRepositoryMock = new Mock<IDeckRepository>();
-		_deckAppService = new DeckAppService(_deckValidatorMock.Object, _reviewCardServiceMock.Object, _deckRepositoryMock.Object);
+		_service = new DeckAppService(_deckValidatorMock.Object, _cardReviewServiceMock.Object, _deckRepositoryMock.Object);
 	}
 
 	[Fact]
-	public async Task AddDeckAsync_Should_Call_Repository_And_SaveChanges()
+	public async Task AddDeckAsync_ReturnsSuccess_WhenValid()
 	{
-		var deckDto = CreateFakeAddOrUpdateDeck();
+		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		_deckValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
+		_deckRepositoryMock.Setup(r => r.AddDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
+		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
-		_deckRepositoryMock.Setup(m => m.AddDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
-		await _deckAppService.AddDeckAsync(deckDto, Guid.NewGuid());
+		var result = await _service.AddDeckAsync(dto, _userId);
 
-		_deckRepositoryMock.Verify(r => r.AddDeckAsync(It.IsAny<Deck>()), Times.Once);
-		_deckRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
-	}
-
-	[Fact]
-	public async Task AddDeckAsync_Should_Return_Conflict_When_Deck_Already_Exists()
-	{
-		// Arrange
-		var deckDto = CreateFakeAddOrUpdateDeck();
-		_deckValidatorMock
-			.Setup(v => v.EnsureIsValid(It.IsAny<Deck>()))
-			.ReturnsAsync(ResultFactory.Conflict("Deck already exists"));
-
-		// Act
-		var result = await _deckAppService.AddDeckAsync(deckDto, Guid.NewGuid());
-
-		// Assert
-		result.Status.Should().Be(ResultStatus.Conflict);
-		_deckRepositoryMock.Verify(r => r.AddDeckAsync(It.IsAny<Deck>()), Times.Never);
-	}
-
-
-	[Fact]
-	public async Task UpdateDeckAsync_Should_Call_Repository_And_SaveChanges()
-	{
-		var deckDto = CreateFakeAddOrUpdateDeck();
-		_deckRepositoryMock.Setup(m => m.UpdateDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
-
-		await _deckAppService.UpdateDeckAsync(Guid.NewGuid(), deckDto, Guid.NewGuid());
-
-		_deckRepositoryMock.Verify(r => r.UpdateDeckAsync(It.IsAny<Deck>()), Times.Once);
-		_deckRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
-	}
-
-	[Fact]
-	public async Task UpdateDeckAsync_Should_Return_Conflict_When_Deck_Already_Exists()
-	{
-		// Arrange
-		var deckDto = CreateFakeAddOrUpdateDeck();
-		var exceptionMessage = "Deck name already in use!";
-		_deckValidatorMock
-			.Setup(v => v.EnsureIsValid(It.IsAny<Deck>()))
-			.ReturnsAsync(ResultFactory.Conflict(exceptionMessage));
-
-		// Act
-		var result = await _deckAppService.UpdateDeckAsync(Guid.NewGuid(), deckDto, Guid.NewGuid());
-
-		// Assert
-		result.Status.Should().Be(ResultStatus.Conflict);
-		result.ErrorMessage.Should().Be(exceptionMessage);
-		_deckRepositoryMock.Verify(r => r.UpdateDeckAsync(It.IsAny<Deck>()), Times.Never);
-	}
-
-	[Fact]
-	public async Task DeleteDeckAsync_Should_Call_Repository_And_SaveChanges_When_Deck_Exists()
-	{
-		var deckId = Guid.NewGuid();
-		_deckRepositoryMock.Setup(r => r.DeleteDeckAsync(deckId)).ReturnsAsync(ResultFactory.Success());
-
-		var result = await _deckAppService.DeleteDeckAsync(deckId);
-
-		result.Value.Should()
-			.BeTrue();
-		_deckRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
-	}
-
-	[Fact]
-	public async Task DeleteDeckAsync_Should_Return_False_When_Deck_Does_Not_Exist()
-	{
-		var deckId = Guid.NewGuid();
-		_deckRepositoryMock.Setup(r => r.DeleteDeckAsync(deckId)).ReturnsAsync(ResultFactory.NotFound());
-
-		var result = await _deckAppService.DeleteDeckAsync(deckId);
-
-		result.Value.Should().BeFalse();
-		_deckRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Never);
-	}
-
-	[Fact]
-	public async Task GetDeckByIdAsync_Should_Return_DeckDto_When_Deck_Exists()
-	{
-		var deckId = Guid.NewGuid();
-		var deck = new Deck(deckId, "Deck", "description", Guid.NewGuid(), "english", "spanish");
-		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(deckId)).ReturnsAsync(ResultFactory.Success(deck));
-
-		var result = await _deckAppService.GetDeckByIdAsync(deckId);
-
-		result.Should().NotBeNull();
-		result.Value!.Id.Should().Be(deckId);
-	}
-
-	[Fact]
-	public async Task GetDeckByIdAsync_Should_Return_NotFound_When_Deck_Does_Not_Exist()
-	{
-		// Arrange
-		_deckRepositoryMock
-			.Setup(r => r.GetDeckByIdAsync(It.IsAny<Guid>()))
-			.ReturnsAsync(ResultFactory.NotFound<Deck>("Deck not found."));
-
-		// Act
-		var result = await _deckAppService.GetDeckByIdAsync(Guid.NewGuid());
-
-		// Assert
-		result.Status.Should().Be(ResultStatus.NotFound);
-		result.ErrorMessage.Should().Be("Deck not found.");
-	}
-
-	[Fact]
-	public async Task AddCardAsync_Should_Call_Repository_And_SaveChanges()
-	{
-		var cardDto = new AddOrUpdateCardDto{ OriginalWord = "Hola", TranslatedWord = "Hello" };
-
-		await _deckAppService.AddCardAsync(cardDto, Guid.NewGuid());
-
-		_deckRepositoryMock.Verify(r => r.AddCardAsync(It.IsAny<Card>()), Times.Once);
-		_deckRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
-	}
-
-	[Fact]
-	public async Task ReviewCardAsync_Should_Update_Card_And_SaveChanges_When_Card_Exists()
-	{
-		var deckId = Guid.NewGuid();
-		var card = new Card(deckId, "Hola", "Hello", 3, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(-1));
-		_deckRepositoryMock.Setup(r => r.GetCardByIdAsync(deckId, card.Id)).ReturnsAsync(ResultFactory.Success(card));
-
-		await _deckAppService.ReviewCardAsync(deckId, card.Id, true);
-
-		_reviewCardServiceMock.Verify(r => r.UpdateReview(card, true), Times.Once);
-		_deckRepositoryMock.Verify(r => r.UpdateCardAsync(card), Times.Once);
-		_deckRepositoryMock.Verify(r => r.SaveChangesAsync(), Times.Once);
-	}
-
-	[Fact]
-	public async Task ReviewCardAsync_Returns_NotFoundStatusResult_When_Card_Not_Found()
-	{
-		var deckId = Guid.NewGuid();
-		var cardId = Guid.NewGuid();
-
-		_deckRepositoryMock.Setup(r => r.GetCardByIdAsync(deckId, cardId)).ReturnsAsync(ResultFactory.NotFound<Card>());
-
-		var result = await _deckAppService.ReviewCardAsync(deckId, cardId, true);
-
-		result.Status.Should().Be(ResultStatus.NotFound);
-	}
-
-	[Fact]
-	public async Task GetCardsToReview_Should_Return_Correct_Cards()
-	{
-		var deckId = Guid.NewGuid();
-		var untilDate = DateTime.UtcNow;
-		var pageSize = 10;
-		var cards = new List<Card>
-					{
-						new(deckId, "Hola", "Hello", 1, DateTime.UtcNow.AddDays(1), DateTime.UtcNow.AddDays(-1))
-					};
-		int? count = cards.Count;
-
-		_deckRepositoryMock
-			.Setup(r => r.GetCardsToReview(deckId, untilDate, pageSize, null))
-			.ReturnsAsync(ResultFactory.Success((cards.AsEnumerable(), count)));
-
-		var result = await _deckAppService.GetCardsToReview(deckId, untilDate, pageSize, null);
 		Assert.True(result.IsSuccess);
-
-		result.Value.Cards.Should().HaveCount(1);
-		result.Value.Cards.First().OriginalWord.Should().Be("Hola");
-		result.Value.Count.Should().Be(count);
+		Assert.NotEqual(Guid.Empty, result.Value);
 	}
 
 	[Fact]
-	public async Task GetCardsToReview_Should_Return_InvalidArguments_When_PageSize_Is_Less_Than_One()
+	public async Task AddDeckAsync_ReturnsFailure_WhenValidationFails()
 	{
-		// Arrange
-		var deckId = Guid.NewGuid();
-		var untilDate = DateTime.UtcNow;
-		var pageSize = 0; // <-- Inválido
+		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		_deckValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.InvalidArgument("error"));
 
-		// Act
-		var result = await _deckAppService.GetCardsToReview(deckId, untilDate, pageSize, null);
+		var result = await _service.AddDeckAsync(dto, _userId);
 
-		// Assert
-		result.Status.Should().Be(ResultStatus.InvalidArguments);
-		result.ErrorMessage.Should().Contain("page number must be greater than 0");
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.InvalidArguments, result.Status);
 	}
-
 
 	[Fact]
-	public async Task GetCardCountAsync_Should_Return_Correct_Count()
+	public async Task AddDeckAsync_ReturnsFailure_WhenRepositoryFails()
 	{
-		var deckId = Guid.NewGuid();
-		_deckRepositoryMock.Setup(r => r.GetCardCountAsync(deckId)).ReturnsAsync(ResultFactory.Success(5));
+		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		_deckValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
+		_deckRepositoryMock.Setup(r => r.AddDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Conflict("error"));
 
-		var result = await _deckAppService.GetCardCountAsync(deckId);
+		var result = await _service.AddDeckAsync(dto, _userId);
 
-		result.Value.Should().Be(5);
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.Conflict, result.Status);
 	}
 
-	private static DeckDto CreateFakeDeck()
+	[Fact]
+	public async Task UpdateDeckAsync_ReturnsSuccess_WhenValid()
 	{
-		return new DeckDto(Guid.NewGuid(), "Test Deck", "Description", Guid.NewGuid(), "english", "spanish");
+		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
+		_deckRepositoryMock.Setup(r => r.UpdateDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
+		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+
+		var result = await _service.UpdateDeckAsync(_deckId, dto, _userId);
+
+		Assert.True(result.IsSuccess);
 	}
 
-	private static AddOrUpdateDeckDto CreateFakeAddOrUpdateDeck()
+	[Fact]
+	public async Task UpdateDeckAsync_ReturnsFailure_WhenNoPermission()
 	{
-		return new AddOrUpdateDeckDto { Name = "Test Deck", Description = "Description", OriginalLanguage = "English", TranslatedLanguage = "Spanish" };
+		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.UpdateDeckAsync(_deckId, dto, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
 	}
+
+	[Fact]
+	public async Task UpdateDeckAsync_ReturnsFailure_WhenValidationFails()
+	{
+		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.InvalidArgument("error"));
+
+		var result = await _service.UpdateDeckAsync(_deckId, dto, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.InvalidArguments, result.Status);
+	}
+
+	[Fact]
+	public async Task DeleteDeckAsync_ReturnsSuccess_WhenValid()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.DeleteDeckAsync(_deckId)).ReturnsAsync(ResultFactory.Success());
+		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+
+		var result = await _service.DeleteDeckAsync(_deckId, _userId);
+
+		Assert.True(result.IsSuccess);
+	}
+
+	[Fact]
+	public async Task DeleteDeckAsync_ReturnsFailure_WhenNoPermission()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.DeleteDeckAsync(_deckId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task DeleteDeckAsync_ReturnsFailure_WhenRepositoryFails()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.DeleteDeckAsync(_deckId)).ReturnsAsync(ResultFactory.Conflict("error"));
+
+		var result = await _service.DeleteDeckAsync(_deckId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.Conflict, result.Status);
+	}
+
+	[Fact]
+	public async Task GetDeckByIdAsync_ReturnsSuccess_WhenValid()
+	{
+		var deck = CreateDeck();
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(deck));
+
+		var result = await _service.GetDeckByIdAsync(_deckId, _userId);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal(deck.Id, result.Value.Id);
+	}
+
+	[Fact]
+	public async Task GetDeckByIdAsync_ReturnsFailure_WhenNoPermission()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.GetDeckByIdAsync(_deckId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task GetDeckByIdAsync_ReturnsFailure_WhenNotFound()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.NotFound<Deck>("not found"));
+
+		var result = await _service.GetDeckByIdAsync(_deckId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task GetUserDecksAsync_ReturnsSuccess_WhenValid()
+	{
+		var decks = new List<Deck> { CreateDeck() };
+		_deckRepositoryMock.Setup(r => r.GetDecksByUserIdAsync(_userId)).ReturnsAsync(ResultFactory.Success(decks.AsEnumerable()));
+
+		var result = await _service.GetUserDecksAsync(_userId);
+
+		Assert.True(result.IsSuccess);
+		Assert.Single(result.Value);
+	}
+
+	[Fact]
+	public async Task GetUserDecksAsync_ReturnsFailure_WhenRepositoryFails()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDecksByUserIdAsync(_userId)).ReturnsAsync(ResultFactory.NotFound<IEnumerable<Deck>>("not found"));
+
+		var result = await _service.GetUserDecksAsync(_userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task AddCardAsync_ReturnsSuccess_WhenValid()
+	{
+		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.AddCardAsync(It.IsAny<Card>())).ReturnsAsync(ResultFactory.Success());
+		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+
+		var result = await _service.AddCardAsync(dto, _deckId, _userId);
+
+		Assert.True(result.IsSuccess);
+		Assert.NotEqual(Guid.Empty, result.Value);
+	}
+
+	[Fact]
+	public async Task AddCardAsync_ReturnsFailure_WhenNoPermission()
+	{
+		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.AddCardAsync(dto, _deckId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task AddCardAsync_ReturnsFailure_WhenRepositoryFails()
+	{
+		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.AddCardAsync(It.IsAny<Card>())).ReturnsAsync(ResultFactory.Conflict("error"));
+
+		var result = await _service.AddCardAsync(dto, _deckId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.Conflict, result.Status);
+	}
+
+	[Fact]
+	public async Task UpdateCardAsync_ReturnsSuccess_WhenValid()
+	{
+		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.UpdateCardAsync(It.IsAny<Card>())).ReturnsAsync(ResultFactory.Success());
+		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+
+		var result = await _service.UpdateCardAsync(dto, _deckId, _cardId, _userId);
+
+		Assert.True(result.IsSuccess);
+	}
+
+	[Fact]
+	public async Task UpdateCardAsync_ReturnsFailure_WhenNoPermission()
+	{
+		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.UpdateCardAsync(dto, _deckId, _cardId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task UpdateCardAsync_ReturnsFailure_WhenRepositoryFails()
+	{
+		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.UpdateCardAsync(It.IsAny<Card>())).ReturnsAsync(ResultFactory.Conflict("error"));
+
+		var result = await _service.UpdateCardAsync(dto, _deckId, _cardId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.Conflict, result.Status);
+	}
+
+	[Fact]
+	public async Task DeleteCardAsync_ReturnsSuccess_WhenValid()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.DeleteCardAsync(_deckId, _cardId)).ReturnsAsync(ResultFactory.Success());
+		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+
+		var result = await _service.DeleteCardAsync(_deckId, _cardId, _userId);
+
+		Assert.True(result.IsSuccess);
+	}
+
+	[Fact]
+	public async Task DeleteCardAsync_ReturnsFailure_WhenNoPermission()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.DeleteCardAsync(_deckId, _cardId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task DeleteCardAsync_ReturnsFailure_WhenRepositoryFails()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.DeleteCardAsync(_deckId, _cardId)).ReturnsAsync(ResultFactory.Conflict("error"));
+
+		var result = await _service.DeleteCardAsync(_deckId, _cardId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.Conflict, result.Status);
+	}
+
+	[Fact]
+	public async Task GetCardByIdAsync_ReturnsSuccess_WhenValid()
+	{
+		var card = CreateCard();
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.GetCardByIdAsync(_deckId, _cardId)).ReturnsAsync(ResultFactory.Success(card));
+
+		var result = await _service.GetCardByIdAsync(_deckId, _cardId, _userId);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal(card.Id, result.Value.Id);
+	}
+
+	[Fact]
+	public async Task GetCardByIdAsync_ReturnsFailure_WhenNoPermission()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.GetCardByIdAsync(_deckId, _cardId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task GetCardByIdAsync_ReturnsFailure_WhenNotFound()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.GetCardByIdAsync(_deckId, _cardId)).ReturnsAsync(ResultFactory.NotFound<Card>("not found"));
+
+		var result = await _service.GetCardByIdAsync(_deckId, _cardId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task GetCardsAsync_ReturnsSuccess_WhenValid()
+	{
+		var cards = new List<Card> { CreateCard() };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.GetCardsAsync(_deckId, 1, 10)).ReturnsAsync(ResultFactory.Success(cards.AsEnumerable()));
+
+		var result = await _service.GetCardsAsync(_deckId, _userId, 1, 10);
+
+		Assert.True(result.IsSuccess);
+		Assert.Single(result.Value);
+	}
+
+	[Fact]
+	public async Task GetCardsAsync_ReturnsFailure_WhenNoPermission()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.GetCardsAsync(_deckId, _userId, 1, 10);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task GetCardsAsync_ReturnsFailure_WhenRepositoryFails()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.GetCardsAsync(_deckId, 1, 10)).ReturnsAsync(ResultFactory.NotFound<IEnumerable<Card>>("not found"));
+
+		var result = await _service.GetCardsAsync(_deckId, _userId, 1, 10);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task GetCardCountAsync_ReturnsSuccess_WhenValid()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.GetCardCountAsync(_deckId)).ReturnsAsync(ResultFactory.Success(5));
+
+		var result = await _service.GetCardCountAsync(_deckId, _userId);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal(5, result.Value);
+	}
+
+	[Fact]
+	public async Task GetCardCountAsync_ReturnsFailure_WhenNoPermission()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.GetCardCountAsync(_deckId, _userId);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task GetCardsToReview_ReturnsSuccess_WhenValid()
+	{
+		var cards = new List<Card> { CreateCard() };
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.GetCardsToReview(_deckId, It.IsAny<DateTime>(), 10, null))
+			.ReturnsAsync(ResultFactory.Success((cards.AsEnumerable(), (int?)1)));
+
+		var result = await _service.GetCardsToReview(_deckId, _userId, DateTime.UtcNow, 10, null);
+
+		Assert.True(result.IsSuccess);
+		Assert.Single(result.Value.Cards);
+		Assert.Equal(1, result.Value.Count);
+	}
+
+	[Fact]
+	public async Task GetCardsToReview_ReturnsFailure_WhenPageSizeInvalid()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+
+		var result = await _service.GetCardsToReview(_deckId, _userId, DateTime.UtcNow, 0, null);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.InvalidArguments, result.Status);
+	}
+
+	[Fact]
+	public async Task GetCardsToReview_ReturnsFailure_WhenNoPermission()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.GetCardsToReview(_deckId, _userId, DateTime.UtcNow, 10, null);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task GetCardsToReview_ReturnsFailure_WhenRepositoryFails()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.GetCardsToReview(_deckId, It.IsAny<DateTime>(), 10, null))
+			.ReturnsAsync(ResultFactory.NotFound<(IEnumerable<Card>, int?)>("not found"));
+
+		var result = await _service.GetCardsToReview(_deckId, _userId, DateTime.UtcNow, 10, null);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task ReviewCardAsync_ReturnsSuccess_WhenValid()
+	{
+		var card = CreateCard();
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.GetCardByIdAsync(_deckId, _cardId)).ReturnsAsync(ResultFactory.Success(card));
+		_deckRepositoryMock.Setup(r => r.UpdateCardAsync(card)).ReturnsAsync(ResultFactory.Success());
+		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+
+		var result = await _service.ReviewCardAsync(_deckId, _cardId, _userId, true);
+
+		Assert.True(result.IsSuccess);
+		_cardReviewServiceMock.Verify(s => s.UpdateReview(card, true), Times.Once);
+	}
+
+	[Fact]
+	public async Task ReviewCardAsync_ReturnsFailure_WhenNoPermission()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
+
+		var result = await _service.ReviewCardAsync(_deckId, _cardId, _userId, true);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task ReviewCardAsync_ReturnsFailure_WhenCardNotFound()
+	{
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.GetCardByIdAsync(_deckId, _cardId)).ReturnsAsync(ResultFactory.NotFound<Card>("not found"));
+
+		var result = await _service.ReviewCardAsync(_deckId, _cardId, _userId, true);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.NotFound, result.Status);
+	}
+
+	[Fact]
+	public async Task ReviewCardAsync_ReturnsFailure_WhenUpdateFails()
+	{
+		var card = CreateCard();
+		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
+		_deckRepositoryMock.Setup(r => r.GetCardByIdAsync(_deckId, _cardId)).ReturnsAsync(ResultFactory.Success(card));
+		_deckRepositoryMock.Setup(r => r.UpdateCardAsync(card)).ReturnsAsync(ResultFactory.Conflict("error"));
+
+		var result = await _service.ReviewCardAsync(_deckId, _cardId, _userId, true);
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.Conflict, result.Status);
+	}
+
+	private Deck CreateDeck(Guid? userId = null) =>
+	new Deck(_deckId, "Deck", "Desc", userId ?? _userId, "en", "es");
+
+	private Card CreateCard(Guid? deckId = null) =>
+		new Card(_cardId, deckId ?? _deckId, "hello", "hola", 0, DateTime.UtcNow.AddDays(1), DateTime.MinValue);
 }

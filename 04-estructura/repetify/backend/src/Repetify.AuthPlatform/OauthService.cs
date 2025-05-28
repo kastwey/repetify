@@ -18,7 +18,7 @@ public abstract class OauthService : IOauthService
 
 	private readonly HttpClient _httpClient;
 
-	public OauthService(IOptionsSnapshot<OauthConfig> oauthConfig, IHttpClientFactory httpClientFactory)
+	protected OauthService(IOptionsSnapshot<OauthConfig> oauthConfig, IHttpClientFactory httpClientFactory)
 	{
 		_oauthConfig = oauthConfig;
 		_httpClient = httpClientFactory.CreateClient();
