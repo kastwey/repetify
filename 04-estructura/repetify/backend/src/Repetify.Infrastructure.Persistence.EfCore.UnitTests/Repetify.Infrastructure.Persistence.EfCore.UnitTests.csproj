@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Repetify.crosscutting\Repetify.crosscutting.csproj" />
+    <ProjectReference Include="..\Repetify.Crosscutting\Repetify.Crosscutting.csproj" />
     <ProjectReference Include="..\Repetify.Infrastructure.Persistence.EfCore\Repetify.Infrastructure.Persistence.EfCore.csproj" />
     <ProjectReference Include="..\Repetify.Domain\Repetify.Domain.csproj" />
   </ItemGroup>

@@ -7,6 +7,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Repetify.crosscutting\Repetify.crosscutting.csproj" />
+	  <ProjectReference Include="..\Repetify.Crosscutting\Repetify.Crosscutting.csproj" />
 	</ItemGroup>
 </Project>

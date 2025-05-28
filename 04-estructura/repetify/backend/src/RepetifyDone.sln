@@ -41,7 +41,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".default", ".default", "{1A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repetify.AuthPlatform", "Repetify.AuthPlatform\Repetify.AuthPlatform.csproj", "{8136D6B1-8DBA-4358-A18F-0E2AE3EED078}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repetify.crosscutting", "Repetify.crosscutting\Repetify.crosscutting.csproj", "{888C0C53-62DF-4BAE-9A96-E42C4623643B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Repetify.Crosscutting", "Repetify.Crosscutting\Repetify.Crosscutting.csproj", "{888C0C53-62DF-4BAE-9A96-E42C4623643B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
