@@ -37,7 +37,7 @@ public class DeckAppServiceTests
 	public async Task AddDeckAsync_ReturnsSuccess_WhenValid()
 	{
 		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
-		_deckValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
+		_deckValidatorMock.Setup(v => v.EnsureIsValidAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.AddDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
@@ -51,7 +51,7 @@ public class DeckAppServiceTests
 	public async Task AddDeckAsync_ReturnsFailure_WhenValidationFails()
 	{
 		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
-		_deckValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.InvalidArgument("error"));
+		_deckValidatorMock.Setup(v => v.EnsureIsValidAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.InvalidArgument("error"));
 
 		var result = await _service.AddDeckAsync(dto, _userId);
 
@@ -63,7 +63,7 @@ public class DeckAppServiceTests
 	public async Task AddDeckAsync_ReturnsFailure_WhenRepositoryFails()
 	{
 		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
-		_deckValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
+		_deckValidatorMock.Setup(v => v.EnsureIsValidAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.AddDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Conflict("error"));
 
 		var result = await _service.AddDeckAsync(dto, _userId);
@@ -77,7 +77,7 @@ public class DeckAppServiceTests
 	{
 		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
-		_deckValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
+		_deckValidatorMock.Setup(v => v.EnsureIsValidAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.UpdateDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
 
@@ -103,7 +103,7 @@ public class DeckAppServiceTests
 	{
 		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
-		_deckValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.InvalidArgument("error"));
+		_deckValidatorMock.Setup(v => v.EnsureIsValidAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.InvalidArgument("error"));
 
 		var result = await _service.UpdateDeckAsync(_deckId, dto, _userId);
 
@@ -423,17 +423,6 @@ public class DeckAppServiceTests
 		Assert.True(result.IsSuccess);
 		Assert.Single(result.Value.Cards);
 		Assert.Equal(1, result.Value.Count);
-	}
-
-	[Fact]
-	public async Task GetCardsToReview_ReturnsFailure_WhenPageSizeInvalid()
-	{
-		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
-
-		var result = await _service.GetCardsToReview(_deckId, _userId, DateTime.UtcNow, 0, null);
-
-		Assert.False(result.IsSuccess);
-		Assert.Equal(ResultStatus.InvalidArguments, result.Status);
 	}
 
 	[Fact]

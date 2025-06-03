@@ -22,7 +22,7 @@ public class DeckValidator : IDeckValidator
 	}
 
 	/// <inheritdoc/>
-	public async Task<Result> EnsureIsValid(Deck deck)
+	public async Task<Result> EnsureIsValidAsync(Deck deck)
 	{
 		return await EnsureNameIsUnique(deck).ConfigureAwait(false);
 	}

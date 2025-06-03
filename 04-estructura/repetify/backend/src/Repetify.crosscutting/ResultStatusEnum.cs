@@ -23,4 +23,8 @@ public enum ResultStatus
 	/// Indicates that the provided arguments are invalid.
 	/// </summary>
 	InvalidArguments,
+	/// <summary>
+	///  Unknown status, typically used when the status cannot be determined or is not applicable.
+	/// </summary>
+	Unknown,
 }

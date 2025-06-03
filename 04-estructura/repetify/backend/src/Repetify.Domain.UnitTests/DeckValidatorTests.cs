@@ -18,7 +18,7 @@ public class DeckValidatorTests
 
 		// Act & Assert
 		await Assert.ThrowsAsync<ArgumentNullException>(
-			() => validator.EnsureIsValid(null!)
+			() => validator.EnsureIsValidAsync(null!)
 		);
 	}
 
@@ -42,7 +42,7 @@ public class DeckValidatorTests
 		);
 
 		// Act
-		var result = await validator.EnsureIsValid(deck);
+		var result = await validator.EnsureIsValidAsync(deck);
 
 		// Assert
 		Assert.False(result.IsSuccess);
@@ -69,7 +69,7 @@ public class DeckValidatorTests
 		);
 
 		// Act
-		var result = await validator.EnsureIsValid(deck);
+		var result = await validator.EnsureIsValidAsync(deck);
 		// assert
 		Assert.True(result.IsSuccess, "Expected validation to succeed for a unique deck name.");
 	}

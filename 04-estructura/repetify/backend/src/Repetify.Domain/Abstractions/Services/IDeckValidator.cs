@@ -14,5 +14,5 @@ public interface IDeckValidator
 	/// </summary>
 	/// <param name="deck">The deck to validate.</param>
 	/// <returns>A task that represents the asynchronous operation.</returns>
-	Task<Result> EnsureIsValid(Deck deck);
+	Task<Result> EnsureIsValidAsync(Deck deck);
 }
