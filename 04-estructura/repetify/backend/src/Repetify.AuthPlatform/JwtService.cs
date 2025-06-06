@@ -22,7 +22,8 @@ public class JwtService(IOptionsMonitor<JwtConfig> jwtConfig) : IJwtService
 	new Claim(JwtRegisteredClaimNames.Sub, emailAddress),
 	new Claim(JwtRegisteredClaimNames.Email, emailAddress),
 	new Claim(JwtRegisteredClaimNames.FamilyName, familyName),
-	new Claim(JwtRegisteredClaimNames.GivenName, firstName)
+	new Claim(JwtRegisteredClaimNames.GivenName, firstName),
+	new Claim(JwtRegisteredClaimNames.Name, firstName + (familyName is not null ? $" {familyName}" : "")),
 	};
 
 		var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfig.CurrentValue.SigningKey));

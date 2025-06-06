@@ -22,7 +22,7 @@ public class UserValidator : IUserValidator
 	}
 
 	/// <inheritdoc/>
-	public async Task<Result> EnsureIsValid(User user)
+	public async Task<Result> EnsureIsValidAsync(User user)
 	{
 		Result[] results = [
 			await EnsureUsernameIsUnique(user).ConfigureAwait(false),

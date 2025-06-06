@@ -14,5 +14,5 @@ public interface IUserValidator
 	/// </summary>
 	/// <param name="user">The user to validate.</param>
 	/// <returns>A task that represents the asynchronous operation.</returns>
-	Task<Result> EnsureIsValid(User user);
+	Task<Result> EnsureIsValidAsync(User user);
 }

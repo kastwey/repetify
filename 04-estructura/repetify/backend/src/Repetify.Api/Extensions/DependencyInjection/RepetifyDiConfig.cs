@@ -20,6 +20,7 @@ using Repetify.Infrastructure.Persistence.EfCore.Context;
 using Repetify.Infrastructure.Persistence.EfCore.Repositories;
 using Repetify.Infrastructure.Time;
 
+using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 
 namespace Repetify.Api.Extensions.DependencyInjection;
@@ -113,6 +114,7 @@ internal static class RepetifyDiConfig
 			};
 			options.TokenValidationParameters = new TokenValidationParameters
 			{
+				NameClaimType = JwtRegisteredClaimNames.Name,
 				ValidateIssuer = true,
 				ValidateAudience = true,
 				ValidateLifetime = true,

@@ -1,6 +1,4 @@
-﻿using Google.Apis.Auth;
-
-using Repetify.AuthPlatform.Entities;
+﻿using Repetify.AuthPlatform.Entities;
 
 namespace Repetify.AuthPlatform.Abstractions;
 
@@ -21,5 +19,5 @@ public interface IOauthService
 	/// </summary>
 	/// <param name="code">The authorization code received from the OAuth provider.</param>
 	/// <returns>A task that represents the asynchronous operation. The task result contains the OAuth token response.</returns>
-	public Task<OauthCodeExchangeResponse> GetToken(string code);
+	Task<OauthCodeExchangeResponse> ExchangeCodeForToken(string code);
 }

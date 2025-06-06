@@ -29,7 +29,7 @@ public class UserValidatorTests
 			.ReturnsAsync(ResultFactory.Success(false));
 
 		// Act
-		var validatorResult = await _userValidator.EnsureIsValid(user);
+		var validatorResult = await _userValidator.EnsureIsValidAsync(user);
 
 		// assert
 		Assert.True(validatorResult.IsSuccess);
@@ -46,7 +46,7 @@ public class UserValidatorTests
 			.ReturnsAsync(ResultFactory.Success<bool>(false));
 
 		// Act
-		var validatorResult = await _userValidator.EnsureIsValid(user);
+		var validatorResult = await _userValidator.EnsureIsValidAsync(user);
 
 		// Assert
 		Assert.Equal(ResultStatus.Conflict, validatorResult.Status);
@@ -66,7 +66,7 @@ public class UserValidatorTests
 
 
 		// Act
-		var validatorResult = await _userValidator.EnsureIsValid(user);
+		var validatorResult = await _userValidator.EnsureIsValidAsync(user);
 
 		// Assert
 		Assert.Equal(ResultStatus.Conflict, validatorResult.Status);

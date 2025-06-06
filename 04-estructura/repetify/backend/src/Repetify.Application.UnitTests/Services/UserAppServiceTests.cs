@@ -1,9 +1,16 @@
-﻿using Moq;
+﻿using Microsoft.Extensions.Options;
 
-using Repetify.Application.Abstractions.Services;
-using Repetify.Application.Dtos;
+using Moq;
+
+using Repetify.Api.Config;
 using Repetify.Application.Services;
+using Repetify.AuthPlatform.Abstractions;
+using Repetify.AuthPlatform.Abstractions.IdentityProviders;
+using Repetify.AuthPlatform.Entities;
+using Repetify.AuthPlatform.Entities.Microsoft;
 using Repetify.Crosscutting;
+using Repetify.Crosscutting.Enums;
+using Repetify.Crosscutting.Exceptions;
 using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Abstractions.Services;
 using Repetify.Domain.Entities;
@@ -12,143 +19,170 @@ namespace Repetify.Application.UnitTests.Services;
 
 public class UserAppServiceTests
 {
-	private readonly Mock<IUserRepository> _userRepositoryMock;
-	private readonly Mock<IUserValidator> _userValidatorMock;
-	private readonly UserAppService _userAppService;
+	private readonly Mock<IGoogleOauthService> _googleOauthService = new();
+	private readonly Mock<IMicrosoftOauthService> _microsoftOauthService = new();
+	private readonly Mock<IJwtService> _jwtService = new();
+	private readonly Mock<IUserRepository> _userRepository = new();
+	private readonly Mock<IUserValidator> _userValidator = new();
+	private readonly IOptionsSnapshot<FrontendConfig> _frontendConfig;
+	private readonly FrontendConfig _frontendConfigValue;
+	private readonly UserAppService _service;
 
 	public UserAppServiceTests()
 	{
-		_userRepositoryMock = new Mock<IUserRepository>();
-		_userValidatorMock = new Mock<IUserValidator>();
-		_userAppService = new UserAppService(_userRepositoryMock.Object, _userValidatorMock.Object);
+		_frontendConfigValue = new FrontendConfig { FrontendBaseUrl = new("https://localhost:8080") };
+		var frontendConfigMock = new Mock<IOptionsSnapshot<FrontendConfig>>();
+		frontendConfigMock.Setup(x => x.Value).Returns(_frontendConfigValue);
+		_frontendConfig = frontendConfigMock.Object;
+
+		_service = new UserAppService(
+			_googleOauthService.Object,
+			_microsoftOauthService.Object,
+			_jwtService.Object,
+			_userRepository.Object,
+			_userValidator.Object,
+			_frontendConfig
+		);
 	}
 
 	[Fact]
-	public async Task AddUserAsync_ShouldReturnSuccess_WhenUserIsValid()
+	public async Task GetUserByEmailAsync_ReturnsUserDto_When_UserExists()
 	{
-		// Arrange  
-		var userDto = new AddOrUpdateUserDto { Username = "testuser", Email = "test@example.com" };
-		var user = new User(Guid.NewGuid(), userDto.Username, userDto.Email);
-		_userValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<User>())).ReturnsAsync(ResultFactory.Success());
-		_userRepositoryMock.Setup(r => r.AddUserAsync(It.IsAny<User>())).ReturnsAsync(ResultFactory.Success());
-		_userRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+		var user = new User(Guid.NewGuid(), "testuser", "test@example.com");
+		_userRepository.Setup(r => r.GetUserByEmailAsync("test@example.com"))
+			.ReturnsAsync(ResultFactory.Success(user));
 
-		// Act  
-		var result = await _userAppService.AddUserAsync(userDto);
+		var result = await _service.GetUserByEmailAsync("test@example.com");
 
-		// Assert  
-		Assert.Equal(ResultStatus.Success, result.Status);
-		Assert.NotEqual(Guid.Empty, result.Value);
-	}
-
-	[Fact]
-	public async Task AddUserAsync_ShouldReturnConflict_WhenUserAlreadyExists()
-	{
-		// Arrange  
-		var userDto = new AddOrUpdateUserDto { Username = "testuser", Email = "test@example.com" };
-		_userValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<User>())).ReturnsAsync(ResultFactory.Conflict("User already exists."));
-
-		// Act  
-		var result = await _userAppService.AddUserAsync(userDto);
-
-		// Assert  
-		Assert.Equal(ResultStatus.Conflict, result.Status);
-		Assert.Equal("User already exists.", result.ErrorMessage);
-	}
-
-	[Fact]
-	public async Task DeleteUserAsync_ShouldReturnSuccess_WhenUserIsDeleted()
-	{
-		// Arrange  
-		var userId = Guid.NewGuid();
-		_userRepositoryMock.Setup(r => r.DeleteUserAsync(userId)).ReturnsAsync(ResultFactory.Success());
-		_userRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
-
-		// Act  
-		var result = await _userAppService.DeleteUserAsync(userId);
-
-		// Assert  
-		Assert.Equal(ResultStatus.Success, result.Status);
 		Assert.True(result.IsSuccess);
+		Assert.Equal(user.Email, result.Value.Email);
+		Assert.Equal(user.Username, result.Value.Username);
 	}
 
 	[Fact]
-	public async Task DeleteUserAsync_ShouldReturnNotFound_WhenUserDoesNotExist()
+	public async Task GetUserByEmailAsync_PropagatesFailure_When_RepositoryThrowsException()
 	{
-		// Arrange  
-		var userId = Guid.NewGuid();
-		_userRepositoryMock.Setup(r => r.DeleteUserAsync(userId)).ReturnsAsync(ResultFactory.NotFound("Unable to find the user to delete."));
+		var failure = ResultFactory.NotFound<User>("not found");
+		_userRepository.Setup(r => r.GetUserByEmailAsync("fail@example.com"))
+			.ThrowsAsync(new ResultFailureException(failure));
 
-		// Act  
-		var result = await _userAppService.DeleteUserAsync(userId);
+		var result = await _service.GetUserByEmailAsync("fail@example.com");
 
-		// Assert  
+		Assert.False(result.IsSuccess);
 		Assert.Equal(ResultStatus.NotFound, result.Status);
-		Assert.Equal("Unable to find the user to delete.", result.ErrorMessage);
 	}
 
 	[Fact]
-	public async Task UpdateUserAsync_ShouldReturnSuccess_WhenUserIsUpdated()
+	public void GetUriToInitiateOauthSignin_ReturnsGoogleUri_When_ProviderIsGoogle()
 	{
-		// Arrange  
-		var userId = Guid.NewGuid();
-		var userDto = new AddOrUpdateUserDto { Username = "updateduser", Email = "updated@example.com" };
-		_userValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<User>())).ReturnsAsync(ResultFactory.Success());
-		_userRepositoryMock.Setup(r => r.UpdateUserAsync(It.IsAny<User>())).ReturnsAsync(ResultFactory.Success());
-		_userRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+		var uri = new Uri("https://google.com/oauth");
+		_googleOauthService.Setup(s => s.GetOauthCodeUrl(It.IsAny<Uri>())).Returns(uri);
 
-		// Act  
-		var result = await _userAppService.UpdateUserAsync(userDto, userId);
+		var result = _service.GetUriToInitiateOauthSignin(IdentityProvider.Google);
 
-		// Assert  
-		Assert.Equal(ResultStatus.Success, result.Status);
+		Assert.True(result.IsSuccess);
+		Assert.Equal(uri, result.Value);
 	}
 
 	[Fact]
-	public async Task UpdateUserAsync_ShouldReturnConflict_WhenUserAlreadyExists()
+	public void GetUriToInitiateOauthSignin_ReturnsMicrosoftUri_When_ProviderIsMicrosoft()
 	{
-		// Arrange  
-		var userId = Guid.NewGuid();
-		var userDto = new AddOrUpdateUserDto { Username = "updateduser", Email = "updated@example.com" };
-		_userValidatorMock.Setup(v => v.EnsureIsValid(It.IsAny<User>())).ReturnsAsync(ResultFactory.Conflict("User already exists."));
+		var uri = new Uri("https://microsoft.com/oauth");
+		_microsoftOauthService.Setup(s => s.GetOauthCodeUrl(It.IsAny<Uri>())).Returns(uri);
 
-		// Act  
-		var result = await _userAppService.UpdateUserAsync(userDto, userId);
+		var result = _service.GetUriToInitiateOauthSignin(IdentityProvider.Microsoft);
 
-		// Assert  
-		Assert.Equal(ResultStatus.Conflict, result.Status);
-		Assert.Equal("User already exists.", result.ErrorMessage);
+		Assert.True(result.IsSuccess);
+		Assert.Equal(uri, result.Value);
 	}
 
 	[Fact]
-	public async Task GetUserByEmailAsync_ShouldReturnUser_WhenUserExists()
+	public void GetUriToInitiateOauthSignin_ReturnsInvalidArgument_When_ProviderIsUnknown()
 	{
-		// Arrange  
-		var email = "test@example.com";
-		var user = new User(Guid.NewGuid(), "testuser", email);
-		_userRepositoryMock.Setup(r => r.GetUserByEmailAsync(email)).ReturnsAsync(ResultFactory.Success(user));
+		var result = _service.GetUriToInitiateOauthSignin((IdentityProvider)999);
 
-		// Act  
-		var result = await _userAppService.GetUserByEmailAsync(email);
-
-		// Assert  
-		Assert.Equal(ResultStatus.Success, result.Status);
-		Assert.NotNull(result.Value);
-		Assert.Equal(email, result.Value?.Email);
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.InvalidArguments, result.Status);
 	}
 
 	[Fact]
-	public async Task GetUserByEmailAsync_ShouldReturnNotFound_WhenUserDoesNotExist()
+	public async Task FinishOauthFlow_ReturnsJwtAndUrl_When_GoogleFlowIsSuccessful()
 	{
-		// Arrange  
-		var email = "nonexistent@example.com";
-		_userRepositoryMock.Setup(r => r.GetUserByEmailAsync(email)).ReturnsAsync(ResultFactory.NotFound<User>("User not found."));
+		var code = "code";
+		var email = "user@google.com";
+		var idToken = "myIdToken";
+		var payload = new Google.Apis.Auth.GoogleJsonWebSignature.Payload
+		{
+			Email = email,
+			FamilyName = "Family",
+			GivenName = "Given"
+		};
+		_googleOauthService.Setup(s => s.ExchangeCodeForToken(code))
+			.ReturnsAsync(new OauthCodeExchangeResponse { IdToken = idToken, AccessToken = "accessToken", RefreshToken = "refreshToken", TokenType = "bearer", ExpiresIn = 1800, });
+		_googleOauthService.Setup(s => s.GetUserInfo(idToken)).ReturnsAsync(payload);
+		_userRepository.Setup(r => r.GetUserByEmailAsync(email))
+			.ReturnsAsync(ResultFactory.NotFound<User>("not found"));
+		_userRepository.Setup(r => r.AddUserAsync(It.IsAny<User>())).ReturnsAsync(ResultFactory.Success());
+		_userRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+		_jwtService.Setup(j => j.GenerateJwtToken("Family", "Given", email)).Returns("jwt");
 
-		// Act  
-		var result = await _userAppService.GetUserByEmailAsync(email);
+		var result = await _service.FinishOauthFlow(IdentityProvider.Google, code);
 
-		// Assert  
-		Assert.Equal(ResultStatus.NotFound, result.Status);
-		Assert.Equal("User not found.", result.ErrorMessage);
+		Assert.True(result.IsSuccess);
+		Assert.Equal("jwt", result.Value.JwtToken);
+		Assert.Equal(_frontendConfigValue.FrontendBaseUrl, result.Value.ReturnUrl);
+	}
+
+	[Fact]
+	public async Task FinishOauthFlow_ReturnsJwtAndUrl_When_MicrosoftFlowIsSuccessful()
+	{
+		var code = "code";
+		var accessToken = "accesstoken";
+		var email = "user@microsoft.com";
+		var userInfo = new GraphUserResponse
+		{
+			Mail = email,
+			Surname = "Surname",
+			GivenName = "Given",
+			UserPrincipalName = "user@microsoft.com",
+			Id = "id",
+			DisplayName = "Display",
+			PreferredLanguage = "en"
+		};
+		_microsoftOauthService.Setup(s => s.ExchangeCodeForToken(code))
+			.ReturnsAsync(new OauthCodeExchangeResponse { AccessToken = accessToken, IdToken = "myIdToken", RefreshToken = "refreshToken", TokenType = "bearer", ExpiresIn = 1800, });
+		_microsoftOauthService.Setup(s => s.GetUserInfo(accessToken)).ReturnsAsync(userInfo);
+		_userRepository.Setup(r => r.GetUserByEmailAsync(email))
+			.ReturnsAsync(ResultFactory.NotFound<User>("not found"));
+		_userRepository.Setup(r => r.AddUserAsync(It.IsAny<User>())).ReturnsAsync(ResultFactory.Success());
+		_userRepository.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
+		_jwtService.Setup(j => j.GenerateJwtToken("Surname", "Given", email)).Returns("jwt");
+
+		var result = await _service.FinishOauthFlow(IdentityProvider.Microsoft, code);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal("jwt", result.Value.JwtToken);
+		Assert.Equal(_frontendConfigValue.FrontendBaseUrl, result.Value.ReturnUrl);
+	}
+
+	[Fact]
+	public async Task FinishOauthFlow_ReturnsInvalidArgument_When_ProviderIsUnknown()
+	{
+		var result = await _service.FinishOauthFlow((IdentityProvider)999, "code");
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.InvalidArguments, result.Status);
+	}
+
+	[Fact]
+	public async Task FinishOauthFlow_PropagatesFailure_When_OauthServiceThrowsException()
+	{
+		_googleOauthService.Setup(s => s.ExchangeCodeForToken(It.IsAny<string>()))
+			.ThrowsAsync(new ResultFailureException(ResultFactory.InvalidArgument<OauthCodeExchangeResponse>("fail")));
+
+		var result = await _service.FinishOauthFlow(IdentityProvider.Google, "badcode");
+
+		Assert.False(result.IsSuccess);
+		Assert.Equal(ResultStatus.InvalidArguments, result.Status);
 	}
 }

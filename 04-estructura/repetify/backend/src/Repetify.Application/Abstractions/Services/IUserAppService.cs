@@ -1,5 +1,6 @@
 ﻿using Repetify.Application.Dtos;
 using Repetify.Crosscutting;
+using Repetify.Crosscutting.Enums;
 
 namespace Repetify.Application.Abstractions.Services;
 
@@ -16,24 +17,26 @@ public interface IUserAppService
 	Task<Result<UserDto>> GetUserByEmailAsync(string email);
 
 	/// <summary>
-	/// Adds a new user to the system.
+	/// Gets the URI to initiate the OAuth sign-in process for the specified identity provider.
 	/// </summary>
-	/// <param name="user">The user data to add.</param>
-	/// <returns>A <see cref="Result{T}"/> containing the ID of the newly created user, or an appropriate error status.</returns>
-	Task<Result<Guid>> AddUserAsync(AddOrUpdateUserDto user);
+	/// <param name="provider">The identity provider to use for OAuth sign-in.</param>
+	/// <returns>
+	/// A <see cref="Result{T}"/> containing the URI to redirect the user to for OAuth authentication,
+	/// or an appropriate error status if the URI could not be generated.
+	/// </returns>
+	Result<Uri> GetUriToInitiateOauthSignin(IdentityProvider provider, Uri? returnUrl = null);
 
 	/// <summary>
-	/// Edits an existing user's data.
+	/// Completes the OAuth authentication flow for the specified identity provider.
 	/// </summary>
-	/// <param name="user">The updated user data.</param>
-	/// <param name="userId">The user identifier corresponding to the user to be updated</param>
-	/// <returns>A <see cref="Result"/> indicating the success or failure of the operation.</returns>
-	Task<Result> UpdateUserAsync(AddOrUpdateUserDto user, Guid userId);
+	/// <param name="provider">The identity provider used for OAuth authentication.</param>
+	/// <param name="code">The authorization code received from the OAuth provider.</param>
+	/// <returns>
+	/// A <see cref="Result{T}"/> containing a <see cref="FinishedOauthResponseDto"/> with a JWT token (valid in our app)
+	/// and a redirect URI for the controller to redirect the user if necessary.
+	/// The method exchanges the code for a token, verifies if a user with the email in the token claim exists,
+	/// creates a new user if not, and returns the appropriate response DTO.
+	/// </returns>
+	Task<Result<FinishedOauthResponseDto>> FinishOauthFlow(IdentityProvider provider, string code, Uri? returnUrl = null);
 
-	/// <summary>
-	/// Deletes a user from the system.
-	/// </summary>
-	/// <param name="userId">The ID of the user to delete.</param>
-	/// <returns>A <see cref="Result"/> indicating whether the deletion was successful, or an appropriate error status.</returns>
-	Task<Result> DeleteUserAsync(Guid userId);
 }
