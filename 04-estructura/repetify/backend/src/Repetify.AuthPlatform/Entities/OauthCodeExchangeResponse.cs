@@ -2,7 +2,7 @@
 
 namespace Repetify.AuthPlatform.Entities;
 
-public record class OauthCodeExchangeResponse
+public record class OAuthCodeExchangeResponse
 {
 
 	[JsonPropertyName("access_token")]

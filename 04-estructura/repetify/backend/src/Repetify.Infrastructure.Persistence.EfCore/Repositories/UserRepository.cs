@@ -19,32 +19,12 @@ public class UserRepository(RepetifyDbContext dbContext) : RepositoryBase(dbCont
 	{
 		var userEntity = await _context.Users
 			.AsNoTracking()
-			.FirstOrDefaultAsync(u => u.Email == email)
+			.SingleOrDefaultAsync(u => u.Email == email)
 			.ConfigureAwait(false);
 
 		return userEntity is null
 			? ResultFactory.NotFound<User>($"User with email {email} not found.")
 			: ResultFactory.Success(userEntity.ToDomain());
-	}
-
-	///  <inheritdoc/>
-	[SuppressMessage("Globalization", "CA1309:Use ordinal string comparison", Justification = "Not supported in EF Core")]
-	public async Task<Result<bool>> EmailAlreadyExistsAsync(Guid userId, string email)
-	{
-		ArgumentNullException.ThrowIfNull(email);
-		return ResultFactory.Success(await _context.Users
-			.AnyAsync(u => u.Id != userId && u.Email.Equals(email))
-			.ConfigureAwait(false));
-	}
-
-	///  <inheritdoc/>
-	[SuppressMessage("Globalization", "CA1309:Use ordinal string comparison", Justification = "Not supported in EF Core")]
-	public async Task<Result<bool>> UsernameAlreadyExistsAsync(Guid userId, string username)
-	{
-		ArgumentNullException.ThrowIfNull(username);
-		return ResultFactory.Success(await _context.Users
-			.AnyAsync(u => u.Id != userId && u.Username.Equals(username))
-			.ConfigureAwait(false));
 	}
 
 	/// <inheritdoc />  

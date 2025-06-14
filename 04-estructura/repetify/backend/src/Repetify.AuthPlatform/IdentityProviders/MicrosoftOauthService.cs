@@ -10,52 +10,55 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Repetify.AuthPlatform.IdentityProviders;
 
-public sealed class MicrosoftOauthService : OauthService, IMicrosoftOauthService
+public sealed class MicrosoftOAuthService : OAuthService, IMicrosoftOAuthService
 {
 
-	private static JsonSerializerOptions _jsonSerializationOptions = new JsonSerializerOptions
+	private static JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
 	{
 		PropertyNamingPolicy = JsonNamingPolicy.CamelCase
 	};
 
-	private HttpClient _httpClient;
+	private readonly MicrosoftOAuthConfig _oauthConfig;
 
-	public MicrosoftOauthService(IOptionsSnapshot<MicrosoftOauthConfig> oauthConfig, IHttpClientFactory httpClientFactory) : base(oauthConfig, httpClientFactory)
+	private readonly HttpClient _httpClient;
+
+	public MicrosoftOAuthService(IOptionsSnapshot<MicrosoftOAuthConfig> oauthConfig, IHttpClientFactory httpClientFactory) : base(oauthConfig, httpClientFactory)
 	{
+		_oauthConfig = oauthConfig.Value;
 		_httpClient = httpClientFactory.CreateClient();
 	}
 
 	[SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We don't need to catch a specific exception because we're only trying to retrieve the response content from an HTTP response. If it's not possible, the reason doesn't matter.")]
-	public async Task<GraphUserResponse> GetUserInfo(string token)
+	public async Task<GraphUserResponse> GetUserInfoAsync(string token)
 	{
+
 		try
 		{
 			using var message = new HttpRequestMessage
 			{
 				Method = HttpMethod.Get,
-				RequestUri = new Uri("https://graph.microsoft.com/v1.0/me")
+				RequestUri = _oauthConfig.GraphUserInfoUrl
 			};
 
 			message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-			var response = await _httpClient.SendAsync(message).ConfigureAwait(false);
-			string responseContent = default!;
-			try
-			{
-				responseContent = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-			}
-			catch
-			{
-			}
+			using var response = await _httpClient.SendAsync(message).ConfigureAwait(false);
+			var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+
 			if (!response.IsSuccessStatusCode)
 			{
-				throw new GraphException($"Error when retrieving user information from Graph. Error code: {response.StatusCode}. Message: {responseContent ?? "unknown"}.");
+				throw new GraphException($"Error when retrieving user information from Graph. Http : {(int)response.StatusCode}. Reason: {response.ReasonPhrase}. Response body: {responseBody ?? "unknown"}.");
 			}
 
-			return JsonSerializer.Deserialize<GraphUserResponse>(responseContent, _jsonSerializationOptions)!;
+			if (string.IsNullOrWhiteSpace(responseBody))
+			{
+				throw new GraphException("Received empty body from Graph.");
+			}
+
+			return JsonSerializer.Deserialize<GraphUserResponse>(responseBody, _jsonSerializerOptions)!;
 		}
-		catch (Exception ex)
+		catch (Exception ex) when (ex is not GraphException)
 		{
-			throw new InvalidTokenException("Error when validating and retrieving information from Microsoft's token.", ex);
-		}
+			throw new GraphException("Error when retrieving user information from Graph.", ex);
+		} 
 	}
 }

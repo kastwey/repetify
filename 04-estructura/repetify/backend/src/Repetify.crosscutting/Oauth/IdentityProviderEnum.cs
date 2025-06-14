@@ -1,4 +1,4 @@
-﻿namespace Repetify.Crosscutting.Enums;
+﻿namespace Repetify.Crosscutting.OAuth;
 
 public enum IdentityProvider
 {

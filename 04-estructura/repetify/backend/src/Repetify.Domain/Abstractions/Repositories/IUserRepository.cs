@@ -15,16 +15,6 @@ public interface IUserRepository
 	/// <returns>A <see cref="Result{T}"/> containing the user if found, or a status indicating the result.</returns>
 	Task<Result<User>> GetUserByEmailAsync(string email);
 
-	/// <summary>  
-	/// Checks if an email address already exists in the repository.  
-	/// </summary>  
-	Task<Result<bool>> EmailAlreadyExistsAsync(Guid userId, string email);
-
-	/// <summary>  
-	/// Checks if a username already exists in the repository.  
-	/// </summary>  
-	Task<Result<bool>> UsernameAlreadyExistsAsync(Guid userId, string username);
-
 	/// <summary>
 	/// Adds a new user to the repository.
 	/// </summary>

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Repetify.Application.Dtos;
 
-public sealed class FinishedOauthResponseDto
+public sealed class FinishedOAuthResponseDto
 {
 	public required string JwtToken { get; init; }
 

@@ -2,9 +2,9 @@
 
 
 [Serializable]
-public class OauthException : Exception
+public class OAuthException : Exception
 {
-	public OauthException() { }
-	public OauthException(string message) : base(message) { }
-	public OauthException(string message, Exception inner) : base(message, inner) { }
+	public OAuthException() { }
+	public OAuthException(string message) : base(message) { }
+	public OAuthException(string message, Exception inner) : base(message, inner) { }
 }

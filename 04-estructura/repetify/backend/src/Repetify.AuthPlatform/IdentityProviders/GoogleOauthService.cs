@@ -10,14 +10,14 @@ using Microsoft.Extensions.Options;
 
 namespace Repetify.AuthPlatform.IdentityProviders;
 
-public sealed class GoogleOauthService : OauthService, IGoogleOauthService
+public sealed class GoogleOAuthService : OAuthService, IGoogleOAuthService
 {
 
-	public GoogleOauthService(IOptionsSnapshot<GoogleOauthConfig> oauthConfig, IHttpClientFactory httpClientFactory) : base(oauthConfig, httpClientFactory)
+	public GoogleOAuthService(IOptionsSnapshot<GoogleOAuthConfig> oauthConfig, IHttpClientFactory httpClientFactory) : base(oauthConfig, httpClientFactory)
 	{
 	}
 
-	public async Task<GoogleJsonWebSignature.Payload> GetUserInfo(string token)
+	public async Task<GoogleJsonWebSignature.Payload> GetUserInfoAsync(string token)
 	{
 		try
 		{

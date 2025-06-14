@@ -28,7 +28,7 @@ public class AddOrUpdateUserDto
 	/// <remarks>  
 	/// This field is required and cannot exceed 100 characters.  
 	/// </remarks>  
-	[Required(ErrorMessage = "The Username is required.")]
-	[MaxLength(100, ErrorMessage = "The username cannot exceed 100 characters.")]
+	[Required(ErrorMessage = "The Emailis required.")]
+	[MaxLength(100, ErrorMessage = "The Email cannot exceed 100 characters.")]
 	public string? Email { get; set; }
 }

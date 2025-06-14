@@ -21,5 +21,5 @@ public interface IJwtService
 	/// </summary>
 	/// <param name="token">The JWT token to parse.</param>
 	/// <returns>A JwtSecurityToken object.</returns>
-	JwtSecurityToken? ParseToken(string token);
+	JwtSecurityToken ParseToken(string token);
 }

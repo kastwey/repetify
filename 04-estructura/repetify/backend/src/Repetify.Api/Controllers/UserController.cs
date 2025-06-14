@@ -8,15 +8,15 @@ public class UserController : ControllerBase
 {
 
 	[HttpGet("me")]
-	[Authorize]
+ 	[Authorize]
 	public IActionResult GetMe()
 	{
-		var user = User.Identity?.Name;
-		if (user is null)
+		var name = User?.Identity?.Name;
+		if (name is null)
 		{
 			return Unauthorized();
 		}
 
-		return Ok(new { user });
+		return Ok(new { name });
 	}
 }

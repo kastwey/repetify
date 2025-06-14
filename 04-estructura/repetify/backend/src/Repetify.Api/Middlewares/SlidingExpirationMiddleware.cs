@@ -1,5 +1,5 @@
 ﻿using Repetify.AuthPlatform.Abstractions;
-
+using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;
 
 namespace Repetify.Api.Middlewares;
@@ -36,7 +36,7 @@ public class SlidingExpirationMiddleware
 		var cookie = context.Request.Cookies["AuthToken"];
 		if (cookie is not null)
 		{
-			var cookieOptions = new CookieOptions();
+			var cookieOptions = new CookieOptions { HttpOnly = true, Secure = true };
 			if (ShouldRenew(cookie, out var newExpiration, out var newToken))
 			{
 				cookieOptions.Expires = newExpiration;
@@ -54,36 +54,32 @@ public class SlidingExpirationMiddleware
 	/// <param name="newExpiration">The new expiration time for the token.</param>
 	/// <param name="newToken">The new JWT token if renewal is needed.</param>
 	/// <returns><c>true</c> if the token should be renewed; otherwise, <c>false</c>.</returns>
+	[SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "If there is an exception, we just ignore the token and don't renew it, but we won't throw any exception.")]
 	private bool ShouldRenew(string cookieValue, out DateTimeOffset newExpiration, out string? newToken)
 	{
-		// Parse the JWT token from the cookie value
-		var jsonToken = _jwtService.ParseToken(cookieValue);
-		if (jsonToken is null)
+		newExpiration = default;
+		newToken = default;
+
+		try
 		{
-			newExpiration = default;
-			newToken = default;
+			var jsonToken = _jwtService.ParseToken(cookieValue);
+			var expiration = jsonToken.ValidTo;
+			if (expiration - DateTime.UtcNow < TimeSpan.FromMinutes(5))
+			{
+				newExpiration = DateTimeOffset.UtcNow.AddMinutes(30);
+				var familyName = jsonToken.Claims.SingleOrDefault(c => c.Type == JwtRegisteredClaimNames.FamilyName)?.Value;
+				var givenName = jsonToken.Claims.SingleOrDefault(c => c.Type == JwtRegisteredClaimNames.GivenName)?.Value;
+				var email = jsonToken.Claims.SingleOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
+				newToken = _jwtService.GenerateJwtToken(familyName ?? string.Empty, givenName ?? string.Empty, email ?? string.Empty);
+				return true;
+			}
+
 			return false;
 		}
 
-		// Get the expiration time of the token
-		var expiration = jsonToken.ValidTo;
-		// Check if the token is close to expiration (less than 5 minutes remaining)
-		if (expiration - DateTime.UtcNow < TimeSpan.FromMinutes(5))
+		catch (Exception)
 		{
-			// Set the new expiration time to 30 minutes from now
-			newExpiration = DateTimeOffset.UtcNow.AddMinutes(30);
-			// Extract user information from the token claims
-			var familyName = jsonToken.Claims.SingleOrDefault(c => c.Type == JwtRegisteredClaimNames.FamilyName)?.Value;
-			var givenName = jsonToken.Claims.SingleOrDefault(c => c.Type == JwtRegisteredClaimNames.GivenName)?.Value;
-			var email = jsonToken.Claims.SingleOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub)?.Value;
-			// Generate a new JWT token with the extracted user information
-			newToken = _jwtService.GenerateJwtToken(familyName ?? string.Empty, givenName ?? string.Empty, email ?? string.Empty);
-			return true;
+			return false;
 		}
-
-		// If the token does not need to be renewed, set default values
-		newExpiration = default;
-		newToken = default;
-		return false;
 	}
 }

@@ -7,13 +7,19 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Repetify.AuthPlatform.Exceptions;
 
 namespace Repetify.AuthPlatform;
 
-public class JwtService(IOptionsMonitor<JwtConfig> jwtConfig) : IJwtService
+public class JwtService : IJwtService
 {
 
-	private readonly IOptionsMonitor<JwtConfig> _jwtConfig = jwtConfig;
+	private readonly IOptionsMonitor<JwtConfig> _jwtConfig;
+
+	public JwtService(IOptionsMonitor<JwtConfig> jwtConfig)
+	{
+		_jwtConfig = jwtConfig;
+	}
 
 	public string GenerateJwtToken(string familyName, string firstName, string emailAddress)
 	{
@@ -39,9 +45,15 @@ public class JwtService(IOptionsMonitor<JwtConfig> jwtConfig) : IJwtService
 		return new JwtSecurityTokenHandler().WriteToken(token);
 	}
 
-	public JwtSecurityToken? ParseToken(string token)
+	public JwtSecurityToken ParseToken(string token)
 	{
 		var handler = new JwtSecurityTokenHandler();
-		return handler.ReadToken(token) as JwtSecurityToken;
+		var securityToken = handler.ReadToken(token);
+		if (securityToken is not JwtSecurityToken jwtToken)
+		{
+			throw new InvalidTokenException("Unable to deserialize the JWT token.");
+		}
+
+		return jwtToken;
 	}
-	}
+}

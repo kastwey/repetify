@@ -9,10 +9,13 @@ namespace Repetify.AuthPlatform.Config.Microsoft;
 /// <summary>
 /// Configuration settings for Microsoft OAuth.
 /// </summary>
-public class MicrosoftOauthConfig : OauthConfig
+public class MicrosoftOAuthConfig : OAuthConfig
 {
 	/// <summary>
 	/// The configuration section name for Microsoft SSO.
 	/// </summary>
 	public static readonly string ConfigSection = "MicrosoftSso";
+
+	public required Uri GraphUserInfoUrl { get; init; }
+
 }

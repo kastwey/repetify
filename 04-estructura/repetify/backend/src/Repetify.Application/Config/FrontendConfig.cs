@@ -1,4 +1,4 @@
-﻿namespace Repetify.Api.Config;
+﻿namespace Repetify.Application.Config;
 
 public class FrontendConfig
 {

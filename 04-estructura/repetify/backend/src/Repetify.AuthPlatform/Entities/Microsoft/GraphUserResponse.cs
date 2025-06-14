@@ -1,6 +1,6 @@
 ﻿namespace Repetify.AuthPlatform.Entities.Microsoft;
 
-public record class GraphUserResponse
+public class GraphUserResponse
 {
 	public required string UserPrincipalName { get; set; }
 

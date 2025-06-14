@@ -9,7 +9,7 @@ namespace Repetify.AuthPlatform.Config.Google;
 /// <summary>
 /// Configuration settings for Google OAuth.
 /// </summary>
-public class GoogleOauthConfig : OauthConfig
+public class GoogleOAuthConfig : OAuthConfig
 {
 	/// <summary>
 	/// The configuration section name for Google SSO.

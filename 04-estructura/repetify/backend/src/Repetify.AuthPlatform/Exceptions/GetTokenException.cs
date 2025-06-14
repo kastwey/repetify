@@ -2,7 +2,7 @@
 
 
 [Serializable]
-public class GetTokenException : OauthException
+public class GetTokenException : OAuthException
 {
 	public GetTokenException() { }
 	public GetTokenException(string message) : base(message) { }

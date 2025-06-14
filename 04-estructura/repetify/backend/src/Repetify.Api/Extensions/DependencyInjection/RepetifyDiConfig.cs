@@ -2,8 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
-using Repetify.Api.Config;
 using Repetify.Application.Abstractions.Services;
+using Repetify.Application.Config;
 using Repetify.Application.Services;
 using Repetify.AuthPlatform;
 using Repetify.AuthPlatform.Abstractions;
@@ -43,7 +43,6 @@ internal static class RepetifyDiConfig
 	private static IServiceCollection AddDomainDependencies(this IServiceCollection services)
 	{
 		services.AddScoped<IDeckValidator, DeckValidator>();
-		services.AddScoped<IUserValidator, UserValidator>();
 		services.AddSingleton<ICardReviewService, CardReviewService>();
 		return services;
 	}
@@ -52,8 +51,8 @@ internal static class RepetifyDiConfig
 	{
 		services.AddSingleton<IClock, SystemClock>();
 		services.AddSingleton<IJwtService, JwtService>();
-		services.AddScoped<IGoogleOauthService, GoogleOauthService>();
-		services.AddScoped<IMicrosoftOauthService, MicrosoftOauthService>();
+		services.AddScoped<IGoogleOAuthService, GoogleOAuthService>();
+		services.AddScoped<IMicrosoftOAuthService, MicrosoftOAuthService>();
 
 		return services;
 	}
@@ -82,8 +81,8 @@ internal static class RepetifyDiConfig
 	private static IServiceCollection AddApplicationConfig(this IServiceCollection services, IConfiguration configuration)
 	{
 		services.Configure<JwtConfig>(configuration.GetSection(JwtConfig.ConfigSection));
-		services.Configure<GoogleOauthConfig>(configuration.GetSection(GoogleOauthConfig.ConfigSection));
-		services.Configure<MicrosoftOauthConfig>(configuration.GetSection(MicrosoftOauthConfig.ConfigSection));
+		services.Configure<GoogleOAuthConfig>(configuration.GetSection(GoogleOAuthConfig.ConfigSection));
+		services.Configure<MicrosoftOAuthConfig>(configuration.GetSection(MicrosoftOAuthConfig.ConfigSection));
 		services.Configure<FrontendConfig>(configuration.GetSection(FrontendConfig.ConfigSection));
 
 		return services;

@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.Options;
 
-using Repetify.Api.Config;
+using Repetify.Application.Config;
 using Repetify.Application.Abstractions.Services;
 using Repetify.Application.Dtos;
 using Repetify.Application.Extensions.Mappers;
 using Repetify.AuthPlatform.Abstractions;
 using Repetify.AuthPlatform.Abstractions.IdentityProviders;
 using Repetify.Crosscutting;
-using Repetify.Crosscutting.Enums;
+using Repetify.Crosscutting.OAuth;
 using Repetify.Crosscutting.Exceptions;
 using Repetify.Crosscutting.Extensions;
 using Repetify.Domain.Abstractions.Repositories;
@@ -18,20 +18,18 @@ namespace Repetify.Application.Services;
 
 public class UserAppService : IUserAppService
 {
-	private readonly IGoogleOauthService _googleOauthService;
-	private readonly IMicrosoftOauthService _microsoftOauthService;
+	private readonly IGoogleOAuthService _googleOAuthService;
+	private readonly IMicrosoftOAuthService _microsoftOAuthService;
 	private readonly IJwtService _jwtService;
 	private readonly IUserRepository _userRepository;
-	private readonly IUserValidator _userValidator;
 	private readonly FrontendConfig _frontendConfig;
 
-	public UserAppService(IGoogleOauthService googleOauthService, IMicrosoftOauthService microsoftOauthService, IJwtService jwtService, IUserRepository repository, IUserValidator validator, IOptionsSnapshot<FrontendConfig> frontendConfig)
+	public UserAppService(IGoogleOAuthService googleOAuthService, IMicrosoftOAuthService microsoftOAuthService, IJwtService jwtService, IUserRepository repository, IOptionsSnapshot<FrontendConfig> frontendConfig)
 	{
-		_googleOauthService = googleOauthService ?? throw new ArgumentNullException(nameof(googleOauthService));
-		_microsoftOauthService = microsoftOauthService ?? throw new ArgumentNullException(nameof(microsoftOauthService));
+		_googleOAuthService = googleOAuthService ?? throw new ArgumentNullException(nameof(googleOAuthService));
+		_microsoftOAuthService = microsoftOAuthService ?? throw new ArgumentNullException(nameof(microsoftOAuthService));
 		_jwtService = jwtService ?? throw new ArgumentNullException(nameof(jwtService));
 		_userRepository = repository ?? throw new ArgumentNullException(nameof(repository));
-		_userValidator = validator ?? throw new ArgumentNullException(nameof(validator));
 		_frontendConfig = frontendConfig?.Value ?? throw new ArgumentNullException(nameof(frontendConfig));
 	}
 
@@ -48,7 +46,7 @@ public class UserAppService : IUserAppService
 		}
 	}
 
-	public Result<Uri> GetUriToInitiateOauthSignin(IdentityProvider provider, Uri? returnUrl = null)
+	public Result<Uri> InitiateOAuthSignin(IdentityProvider provider, Uri? returnUrl = null)
 	{
 		if (returnUrl is null)
 		{
@@ -57,8 +55,8 @@ public class UserAppService : IUserAppService
 
 		var redirectUri = provider switch
 		{
-			IdentityProvider.Google => _googleOauthService.GetOauthCodeUrl(returnUrl),
-			IdentityProvider.Microsoft => _microsoftOauthService.GetOauthCodeUrl(returnUrl),
+			IdentityProvider.Google => _googleOAuthService.GetOAuthCodeUrl(returnUrl),
+			IdentityProvider.Microsoft => _microsoftOAuthService.GetOAuthCodeUrl(returnUrl),
 			_ => null
 		};
 
@@ -70,46 +68,49 @@ public class UserAppService : IUserAppService
 		return ResultFactory.Success(redirectUri);
 	}
 
-	public async Task<Result<FinishedOauthResponseDto>> FinishOauthFlow(IdentityProvider provider, string code, Uri? returnUrl = null)
+	public async Task<Result<FinishedOAuthResponseDto>> FinishOAuthFlowAsync(IdentityProvider provider, string code, Uri? returnUrl = null)
 	{
 		try
 		{
-			string? token = null;
+			string token;
 
 			switch (provider)
 			{
 				case IdentityProvider.Google:
-					var tokenResponse = await _googleOauthService.ExchangeCodeForToken(code).ConfigureAwait(false);
-					var payload = await _googleOauthService.GetUserInfo(tokenResponse.IdToken).ConfigureAwait(false);
-					await CheckAndAddNewUserAsync(payload.Email, payload.Email).ConfigureAwait(false);
-					token = _jwtService.GenerateJwtToken(payload.FamilyName, payload.GivenName, payload.Email);
+					var googleTokenResponse = await _googleOAuthService.ExchangeCodeForTokenAsync(code).ConfigureAwait(false);
+					var googleUserInfo = await _googleOAuthService.GetUserInfoAsync(googleTokenResponse.IdToken).ConfigureAwait(false);
+					await CheckAndAddNewUserAsync(googleUserInfo.Email, googleUserInfo.Email).ConfigureAwait(false);
+					token = _jwtService.GenerateJwtToken(googleUserInfo.FamilyName, googleUserInfo.GivenName, googleUserInfo.Email);
 					break;
 				case IdentityProvider.Microsoft:
-					var msTokenResponse = await _microsoftOauthService.ExchangeCodeForToken(code).ConfigureAwait(false);
-					var userInfo = await _microsoftOauthService.GetUserInfo(msTokenResponse.AccessToken).ConfigureAwait(false);
-					await CheckAndAddNewUserAsync(userInfo.Mail, userInfo.Mail).ConfigureAwait(false);
-					token = _jwtService.GenerateJwtToken(userInfo.Surname, userInfo.GivenName, userInfo.Mail);
+					var msTokenResponse = await _microsoftOAuthService.ExchangeCodeForTokenAsync(code).ConfigureAwait(false);
+					var msUserInfo = await _microsoftOAuthService.GetUserInfoAsync(msTokenResponse.AccessToken).ConfigureAwait(false);
+					await CheckAndAddNewUserAsync(msUserInfo.Mail, msUserInfo.Mail).ConfigureAwait(false);
+					token = _jwtService.GenerateJwtToken(msUserInfo.Surname, msUserInfo.GivenName, msUserInfo.Mail);
 					break;
 				default:
-					return ResultFactory.InvalidArgument<FinishedOauthResponseDto>("This identity provider is not supported.");
+					return ResultFactory.InvalidArgument<FinishedOAuthResponseDto>("This identity provider is not supported.");
 			}
 
-			return ResultFactory.Success(new FinishedOauthResponseDto { JwtToken = token, ReturnUrl = returnUrl ?? _frontendConfig.FrontendBaseUrl });
+			return ResultFactory.Success(new FinishedOAuthResponseDto { JwtToken = token, ReturnUrl = returnUrl ?? _frontendConfig.FrontendBaseUrl });
 		}
 		catch (ResultFailureException ex)
 		{
-			return ResultFactory.PropagateFailure<FinishedOauthResponseDto>(ex.Result);
+			return ResultFactory.PropagateFailure<FinishedOAuthResponseDto>(ex.Result);
 		}
 	}
 
 	private async Task CheckAndAddNewUserAsync(string username, string email)
 	{
 		var userResult = await GetUserByEmailAsync(email).ConfigureAwait(false);
-		if (!userResult.IsSuccess)
+		if (userResult.Status == ResultStatus.NotFound)
 		{
 			await _userRepository.AddUserAsync(new User(null, email, username)).EnsureSuccessAsync().ConfigureAwait(false);
 			await _userRepository.SaveChangesAsync().ConfigureAwait(false);
 		}
+		else
+		{
+			userResult.EnsureSuccess();
+		}
 	}
-
 }
