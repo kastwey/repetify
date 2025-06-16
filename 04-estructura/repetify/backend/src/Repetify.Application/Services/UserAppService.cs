@@ -35,6 +35,7 @@ public class UserAppService : IUserAppService
 
 	public async Task<Result<UserDto>> GetUserByEmailAsync(string email)
 	{
+		ArgumentNullException.ThrowIfNull(email);
 		try
 		{
 			var user = await _userRepository.GetUserByEmailAsync(email).EnsureSuccessAsync().ConfigureAwait(false);

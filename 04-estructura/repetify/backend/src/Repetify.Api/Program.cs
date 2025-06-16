@@ -24,10 +24,10 @@ internal sealed class Program
 		builder.Services.AddProblemDetails();
 
 		// HttpClient
-		builder.Services.AddHttpClient("RepetifyApi", client =>
+		builder.Services.AddHttpClient("RepetifyApi", options =>
 		{
-			client.DefaultRequestHeaders.Accept.Clear();
-			client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+			options.DefaultRequestHeaders.Accept.Clear();
+			options.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
 		});
 		builder.Services.AddControllers();
 		// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi

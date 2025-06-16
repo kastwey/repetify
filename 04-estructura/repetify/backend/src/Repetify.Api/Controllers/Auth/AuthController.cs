@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Repetify.Api.Constants;
 
 namespace Repetify.Api.Controllers.Auth;
 
@@ -13,7 +14,7 @@ public class AuthController : ControllerBase
 	[HttpPost("logout")]
 	public IActionResult Logout()
 	{
-		Response.Cookies.Delete("AuthToken");
+		Response.Cookies.Delete(AuthConstants.AuthenticationCookieName);
 		return Ok();
 	}
 }

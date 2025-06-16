@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-
+using Repetify.Api.Constants;
 using Repetify.Application.Abstractions.Services;
 using Repetify.Application.Config;
 using Repetify.Application.Services;
@@ -88,13 +88,12 @@ internal static class RepetifyDiConfig
 		return services;
 	}
 
-	private static IServiceCollection AddJwtAuthentication(this IServiceCollection serviceCollection, IConfiguration configuration)
+	private static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
 	{
 		var jwtConfig = configuration.GetSection(JwtConfig.ConfigSection).Get<JwtConfig>()!;
-		serviceCollection.AddAuthentication(options =>
+		services.AddAuthentication(options =>
 		{
 			options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-			options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 		})
 		.AddJwtBearer(options =>
 		{
@@ -102,7 +101,7 @@ internal static class RepetifyDiConfig
 			{
 				OnMessageReceived = (context) =>
 				{
-					var cookie = context.Request.Cookies["AuthToken"];
+					var cookie = context.Request.Cookies[AuthConstants.AuthenticationCookieName];
 					if (cookie != null)
 					{
 						context.Token = cookie;
@@ -123,6 +122,6 @@ internal static class RepetifyDiConfig
 				IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConfig.SigningKey))
 			};
 		});
-		return serviceCollection;
+		return services;
 	}
 }

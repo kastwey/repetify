@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Repetify.Api.Constants;
 using Repetify.Api.Extensions;
 using Repetify.Application.Abstractions.Services;
 using Repetify.Crosscutting.OAuth;
@@ -44,7 +45,7 @@ public class ExternalAuthController(IUserAppService userAppService) : Controller
 		var result = await _userAppService.FinishOAuthFlowAsync(IdentityProvider.Google, code, state is not null ? new(state) : null).ConfigureAwait(false);
 		return result.ToActionResult(response =>
 		{
-			Response.Cookies.Append("AuthToken", response.JwtToken, new CookieOptions { HttpOnly = true, Secure = true, Expires = DateTime.Now.AddMinutes(30) });
+			Response.Cookies.Append(AuthConstants.AuthenticationCookieName, response.JwtToken, new CookieOptions { HttpOnly = true, Secure = true, Expires = DateTime.Now.AddMinutes(30) });
 			return Redirect(response.ReturnUrl.AbsoluteUri);
 		});
 	}
@@ -73,7 +74,7 @@ public class ExternalAuthController(IUserAppService userAppService) : Controller
 		var result = await _userAppService.FinishOAuthFlowAsync(IdentityProvider.Microsoft, code, state is not null ? new(state) : null).ConfigureAwait(false);
 		return result.ToActionResult((oauthResponse) =>
 		{
-			Response.Cookies.Append("AuthToken", oauthResponse.JwtToken, new CookieOptions { HttpOnly = true, Secure = true, Expires = DateTime.Now.AddMinutes(30) });
+			Response.Cookies.Append(AuthConstants.AuthenticationCookieName, oauthResponse.JwtToken, new CookieOptions { HttpOnly = true, Secure = true, Expires = DateTime.Now.AddMinutes(30) });
 			return Redirect(oauthResponse.ReturnUrl.AbsoluteUri);
 			}); ;
 	}

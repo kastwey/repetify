@@ -9,4 +9,9 @@ public interface IClock
 	/// Gets the current UTC date.
 	/// </summary>
 	DateTime UtcNow { get; }
+
+	/// <summary>
+	///  Gets the current UTC date in a DAteTimeOffset date type.
+	/// </summary>
+	DateTimeOffset OffsetUtcNow { get; }
 }
