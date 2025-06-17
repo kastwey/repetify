@@ -1,6 +1,6 @@
 ﻿namespace Repetify.AuthPlatform.Exceptions;
 
-public class GraphException : Exception
+public class GraphException : OAuthException
 {
 	public GraphException()
 	{

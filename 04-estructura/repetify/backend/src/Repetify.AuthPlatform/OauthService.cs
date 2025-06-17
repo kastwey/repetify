@@ -13,6 +13,9 @@ using System;
 
 namespace Repetify.AuthPlatform;
 
+/// <summary>
+/// Abstract base class for OAuth services, providing common logic for OAuth code URL generation and token exchange.
+/// </summary>
 public abstract class OAuthService : IOAuthService
 {
 
@@ -20,6 +23,11 @@ public abstract class OAuthService : IOAuthService
 
 	private readonly HttpClient _httpClient;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="OAuthService"/> class.
+	/// </summary>
+	/// <param name="oauthConfig">The OAuth configuration options.</param>
+	/// <param name="httpClientFactory">The HTTP client factory.</param>
 	protected OAuthService(IOptionsSnapshot<OAuthConfig> oauthConfig, IHttpClientFactory httpClientFactory)
 	{
 		ArgumentNullException.ThrowIfNull(oauthConfig);
@@ -29,6 +37,11 @@ public abstract class OAuthService : IOAuthService
 		_httpClient = httpClientFactory.CreateClient();
 	}
 
+	/// <summary>
+	/// Generates the URL for the OAuth authorization code request.
+	/// </summary>
+	/// <param name="returnUrl">Optional return URL after authorization.</param>
+	/// <returns>URL for the OAuth authorization code request.</returns>
 	public Uri GetOAuthCodeUrl(Uri? returnUrl = null)
 	{
 		var dict = new Dictionary<string, string>
@@ -51,6 +64,12 @@ public abstract class OAuthService : IOAuthService
 				dict.Select(d => $"{d.Key}={WebUtility.UrlEncode(d.Value)}")));
 	}
 
+	/// <summary>
+	/// Exchanges the authorization code for an access token.
+	/// </summary>
+	/// <param name="code">The authorization code received from the OAuth provider.</param>
+	/// <returns>A task that represents the asynchronous operation. The task result contains the OAuth token response.</returns>
+	/// <exception cref="GetTokenException">Thrown when the token request fails or the response cannot be parsed.</exception>
 	[SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We don't need to catcha specific exception because we're only trying to retrieve the response content from an HTTP response. If it's not possible, the reason doesn't matter.")]
 	public async Task<OAuthCodeExchangeResponse> ExchangeCodeForTokenAsync(string code)
 	{
@@ -97,5 +116,4 @@ public abstract class OAuthService : IOAuthService
 			throw new GetTokenException("Error parsing token response.", ex);
 		}
 	}
-
 }

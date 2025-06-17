@@ -1,7 +1,6 @@
 ﻿namespace Repetify.AuthPlatform.Exceptions;
 
 
-[Serializable]
 public class OAuthException : Exception
 {
 	public OAuthException() { }

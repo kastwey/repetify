@@ -78,5 +78,4 @@ public class ExternalAuthController(IUserAppService userAppService) : Controller
 			return Redirect(oauthResponse.ReturnUrl.AbsoluteUri);
 			}); ;
 	}
-
 }

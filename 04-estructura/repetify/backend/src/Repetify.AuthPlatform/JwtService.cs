@@ -11,16 +11,24 @@ using Repetify.AuthPlatform.Exceptions;
 
 namespace Repetify.AuthPlatform;
 
+/// <summary>
+/// Service for generating and parsing JWT tokens.
+/// </summary>
 public class JwtService : IJwtService
 {
 
 	private readonly IOptionsMonitor<JwtConfig> _jwtConfig;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="JwtService"/> class with the specified JWT configuration.
+	/// </summary>
+	/// <param name="jwtConfig">The JWT configuration options monitor.</param>
 	public JwtService(IOptionsMonitor<JwtConfig> jwtConfig)
 	{
 		_jwtConfig = jwtConfig;
 	}
 
+	/// <inheritdoc/>
 	public string GenerateJwtToken(string familyName, string firstName, string emailAddress)
 	{
 		var claims = new[]
@@ -45,6 +53,7 @@ public class JwtService : IJwtService
 		return new JwtSecurityTokenHandler().WriteToken(token);
 	}
 
+	/// <inheritdoc/>
 	public JwtSecurityToken ParseToken(string token)
 	{
 		var handler = new JwtSecurityTokenHandler();

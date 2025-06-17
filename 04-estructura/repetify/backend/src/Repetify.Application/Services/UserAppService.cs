@@ -16,6 +16,9 @@ using Repetify.Domain.Entities;
 
 namespace Repetify.Application.Services;
 
+/// <summary>
+/// Application service for user-related operations, including OAuth sign-in and user retrieval.
+/// </summary>
 public class UserAppService : IUserAppService
 {
 	private readonly IGoogleOAuthService _googleOAuthService;
@@ -24,6 +27,14 @@ public class UserAppService : IUserAppService
 	private readonly IUserRepository _userRepository;
 	private readonly FrontendConfig _frontendConfig;
 
+	/// <summary>
+	/// Initializes a new instance of the <see cref="UserAppService"/> class with the specified dependencies.
+	/// </summary>
+	/// <param name="googleOAuthService">The Google OAuth service implementation.</param>
+	/// <param name="microsoftOAuthService">The Microsoft OAuth service implementation.</param>
+	/// <param name="jwtService">The JWT service for token generation.</param>
+	/// <param name="repository">The user repository for user data operations.</param>
+	/// <param name="frontendConfig">The frontend configuration options.</param>
 	public UserAppService(IGoogleOAuthService googleOAuthService, IMicrosoftOAuthService microsoftOAuthService, IJwtService jwtService, IUserRepository repository, IOptionsSnapshot<FrontendConfig> frontendConfig)
 	{
 		_googleOAuthService = googleOAuthService ?? throw new ArgumentNullException(nameof(googleOAuthService));
@@ -33,6 +44,7 @@ public class UserAppService : IUserAppService
 		_frontendConfig = frontendConfig?.Value ?? throw new ArgumentNullException(nameof(frontendConfig));
 	}
 
+	/// <inheritdoc/>
 	public async Task<Result<UserDto>> GetUserByEmailAsync(string email)
 	{
 		ArgumentNullException.ThrowIfNull(email);
@@ -47,6 +59,7 @@ public class UserAppService : IUserAppService
 		}
 	}
 
+	/// <inheritdoc/>
 	public Result<Uri> InitiateOAuthSignin(IdentityProvider provider, Uri? returnUrl = null)
 	{
 		if (returnUrl is null)
@@ -69,6 +82,7 @@ public class UserAppService : IUserAppService
 		return ResultFactory.Success(redirectUri);
 	}
 
+	/// <inheritdoc/>
 	public async Task<Result<FinishedOAuthResponseDto>> FinishOAuthFlowAsync(IdentityProvider provider, string code, Uri? returnUrl = null)
 	{
 		try
