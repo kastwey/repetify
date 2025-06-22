@@ -23,6 +23,12 @@ public enum ResultStatus
 	/// Indicates that the provided arguments are invalid.
 	/// </summary>
 	InvalidArguments,
+
+	/// <summary>
+	/// Indicates that a business rule was violated.
+	/// </summary>
+	BusinessRuleViolated,
+
 	/// <summary>
 	///  Unknown status, typically used when the status cannot be determined or is not applicable.
 	/// </summary>

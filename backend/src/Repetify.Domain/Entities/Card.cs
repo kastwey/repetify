@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Repetify.Crosscutting;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -46,60 +48,8 @@ public class Card
 	/// </summary>
 	public DateTime PreviousCorrectReview { get; private set; }
 
-	/// <summary>
-	/// Initializes a new instance of the <see cref="Card"/> class with the specified parameters.
-	/// </summary>
-	/// <param name="id">The unique identifier of the card. If null, a new GUID will be generated.</param>
-	/// <param name="deckId">The unique identifier of the deck to which the card belongs.</param>
-	/// <param name="originalWord">The original word on the card.</param>
-	/// <param name="translatedWord">The translated word on the card.</param>
-	public Card(Guid? id, Guid deckId, string originalWord, string translatedWord)
-		: this(id ?? Guid.NewGuid(), deckId, originalWord, translatedWord, correctReviewStreak: 0, nextReviewDate: DateTime.UtcNow.AddDays(1), previousCorrectReview: DateTime.MinValue)
+	private Card(Guid id, Guid deckId, string originalWord, string translatedWord, int correctReviewStreak, DateTime nextReviewDate, DateTime previousCorrectReview)
 	{
-	}
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="Card"/> class with the specified parameters.
-	/// </summary>
-	/// <param name="deckId">The unique identifier of the deck to which the card belongs.</param>
-	/// <param name="originalWord">The original word on the card.</param>
-	/// <param name="translatedWord">The translated word on the card.</param>
-	/// <param name="correctReviewStreak">The number of consecutive correct reviews for the card.</param>
-	/// <param name="nextReviewDate">The date and time when the card is next due for review.</param>
-	/// <param name="previousCorrectReview">The date and time of the last correct review for the card.</param>
-	public Card(Guid deckId, string originalWord, string translatedWord, int correctReviewStreak, DateTime nextReviewDate, DateTime previousCorrectReview)
-		: this(Guid.NewGuid(), deckId, originalWord, translatedWord, correctReviewStreak, nextReviewDate, previousCorrectReview)
-	{
-	}
-
-	/// <summary>
-	/// Initializes a new instance of the <see cref="Card"/> class with the specified parameters.
-	/// </summary>
-	/// <param name="id">The unique identifier of the card.</param>
-	/// <param name="deckId">The unique identifier of the deck to which the card belongs.</param>
-	/// <param name="originalWord">The original word on the card.</param>
-	/// <param name="translatedWord">The translated word on the card.</param>
-	/// <param name="correctReviewStreak">The number of consecutive correct reviews for the card.</param>
-	/// <param name="nextReviewDate">The date and time when the card is next due for review.</param>
-	/// <param name="previousCorrectReview">The date and time of the last correct review for the card.</param>
-	/// <exception cref="ArgumentException">Thrown if <paramref name="originalWord"/> or <paramref name="translatedWord"/> is null or whitespace.</exception>
-	/// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="correctReviewStreak"/> is negative, <paramref name="nextReviewDate"/> is in the past, or <paramref name="previousCorrectReview"/> is in the future.</exception>
-	public Card(Guid id, Guid deckId, string originalWord, string translatedWord, int correctReviewStreak, DateTime nextReviewDate, DateTime previousCorrectReview)
-	{
-		ArgumentException.ThrowIfNullOrWhiteSpace(originalWord);
-		ArgumentException.ThrowIfNullOrWhiteSpace(translatedWord);
-		ArgumentOutOfRangeException.ThrowIfNegative(correctReviewStreak);
-
-		if (nextReviewDate < DateTime.UtcNow)
-		{
-			throw new ArgumentOutOfRangeException(nameof(nextReviewDate), "Next review date cannot be in the past.");
-		}
-
-		if (previousCorrectReview > DateTime.UtcNow)
-		{
-			throw new ArgumentOutOfRangeException(nameof(previousCorrectReview), "Previous correct review date cannot be in the future.");
-		}
-
 		Id = id;
 		DeckId = deckId;
 		OriginalWord = originalWord;
@@ -110,12 +60,73 @@ public class Card
 	}
 
 	/// <summary>
+	/// Attempts to create a new Card instance, returning a Result<Card> indicating success or failure.
+	/// </summary>
+	public static Result<Card> TryCreate(
+		Guid? id,
+		Guid deckId,
+		string originalWord,
+		string translatedWord,
+		int correctReviewStreak = 0,
+		DateTime? nextReviewDate = null,
+		DateTime? previousCorrectReview = null)
+	{
+		var errors = new List<string>();
+
+		if (string.IsNullOrWhiteSpace(originalWord))
+		{
+			errors.Add("Original word cannot be null or whitespace.");
+		}
+
+		if (string.IsNullOrWhiteSpace(translatedWord))
+		{
+			errors.Add("Translated word cannot be null or whitespace.");
+		}
+
+		if (correctReviewStreak < 0)
+		{
+			errors.Add("Correct review streak cannot be negative.");
+		}
+
+		var now = DateTime.UtcNow;
+		var nextReview = nextReviewDate ?? now.AddDays(1);
+		var prevCorrect = previousCorrectReview ?? DateTime.MinValue;
+
+		if (nextReview < now)
+		{
+			errors.Add("Next review date cannot be in the past.");
+		}
+
+		if (prevCorrect > now)
+		{
+			errors.Add("Previous correct review date cannot be in the future.");
+		}
+
+		if (errors.Count > 0)
+		{
+			return ResultFactory.BusinessRuleViolated<Card>(errors.ToArray());
+		}
+
+		var card = new Card(
+			id ?? Guid.NewGuid(),
+			deckId,
+			originalWord,
+			translatedWord,
+			correctReviewStreak,
+			nextReview,
+			prevCorrect
+		);
+
+		return ResultFactory.Success(card);
+	}
+
+	/// <summary>
 	/// Sets the next review date for the card.
 	/// </summary>
 	/// <param name="nextReviewDate">The date and time when the card is next due for review.</param>
 	/// <param name="currentDate">The current date and time, used for validation. Defaults to the current UTC time if not provided.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="nextReviewDate"/> is in the past relative to <paramref name="currentDate"/>.</exception>
-	 public void SetNextReviewDate(DateTime nextReviewDate, DateTime? currentDate = null)
+	public void SetNextReviewDate(DateTime nextReviewDate, DateTime? currentDate = null)
 	{
 		currentDate ??= DateTime.UtcNow;
 
@@ -136,7 +147,7 @@ public class Card
 	public void SetPreviousCorrectReview(DateTime previousCorrectReview, DateTime? currentDate = null)
 	{
 		currentDate ??= DateTime.UtcNow;
-		
+
 		if (previousCorrectReview > currentDate)
 		{
 			throw new ArgumentOutOfRangeException(nameof(previousCorrectReview), "Previous correct review date cannot be in the future.");
