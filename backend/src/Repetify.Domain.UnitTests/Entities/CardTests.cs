@@ -1,4 +1,5 @@
-﻿using Repetify.Domain.Entities;
+﻿using Repetify.Crosscutting;
+using Repetify.Domain.Entities;
 
 namespace Repetify.Domain.UnitTests.Entities;
 
@@ -13,9 +14,11 @@ public class CardTests
 		var translatedWord = "Hola";
 
 		// Act
-		var card = new Card(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
 
 		// Assert
+		Assert.True(cardResult.IsSuccess);
+		var card = cardResult.Value;
 		Assert.NotNull(card);
 		Assert.NotEqual(Guid.Empty, card.Id);
 		Assert.Equal(deckId, card.DeckId);
@@ -24,121 +27,157 @@ public class CardTests
 	}
 
 	[Fact]
-	public void Card_ThrowsArgumentNullException_WhenOriginalWordIsNull()
+	public void Card_ReturnsFailure_WhenOriginalWordIsNull()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
 		string originalWord = null!;
 		var translatedWord = "Hola";
 
-		// Act & Assert
-		Assert.Throws<ArgumentNullException>(() => new Card(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow));
+		// Act
+		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+
+		// Assert
+		Assert.False(cardResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, cardResult.Status);
 	}
 
 	[Fact]
-	public void Card_ThrowsArgumentException_WhenOriginalWordIsEmpty()
+	public void Card_ReturnsFailure_WhenOriginalWordIsEmpty()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var originalWord = string.Empty;
 		var translatedWord = "Hola";
 
-		// Act & Assert
-		Assert.Throws<ArgumentException>(() => new Card(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow));
+		// Act
+		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+
+		// Assert
+		Assert.False(cardResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, cardResult.Status);
 	}
 
 	[Fact]
-	public void Card_ThrowsArgumentException_WhenOriginalWordIsWhitespace()
+	public void Card_ReturnsFailure_WhenOriginalWordIsWhitespace()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var originalWord = "   ";
 		var translatedWord = "Hola";
 
-		// Act & Assert
-		Assert.Throws<ArgumentException>(() => new Card(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow));
+		// Act
+		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+
+		// Assert
+		Assert.False(cardResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, cardResult.Status);
 	}
 
-
-
-
 	[Fact]
-	public void Card_ThrowsArgumentNullException_WhenTranslatedWordIsNull()
+	public void Card_ReturnsFailure_WhenTranslatedWordIsNull()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var originalWord = "Hello";
 		string translatedWord = null!;
 
-		// Act & Assert
-		Assert.Throws<ArgumentNullException>(() => new Card(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow));
+		// Act
+		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+
+		// Assert
+		Assert.False(cardResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, cardResult.Status);
 	}
 
 	[Fact]
-	public void Card_ThrowsArgumentException_WhenTranslatedWordIsEmpty()
+	public void Card_ReturnsFailure_WhenTranslatedWordIsEmpty()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var originalWord = "Hello";
 		var translatedWord = string.Empty;
 
-		// Act & Assert
-		Assert.Throws<ArgumentException>(() => new Card(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow));
+		// Act
+		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+
+		// Assert
+		Assert.False(cardResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, cardResult.Status);
 	}
 
 	[Fact]
-	public void Card_ThrowsArgumentException_WhenTranslatedWordIsWhitespace()
+	public void Card_ReturnsFailure_WhenTranslatedWordIsWhitespace()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var originalWord = "Hello";
 		var translatedWord = "   ";
 
-		// Act & Assert
-		Assert.Throws<ArgumentException>(() => new Card(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow));
+		// Act
+		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+
+		// Assert
+		Assert.False(cardResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, cardResult.Status);
 	}
 
 	[Fact]
-	public void Card_ThrowsArgumentOutOfRangeException_WhenNextReviewDateIsInThePast()
+	public void Card_ReturnsFailure_WhenNextReviewDateIsInThePast()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var originalWord = "Hello";
 		var translatedWord = "Hola";
 		var nextReviewDate = DateTime.UtcNow.AddDays(-1);
-		// Act & Assert
-		Assert.Throws<ArgumentOutOfRangeException>(() => new Card(deckId, originalWord, translatedWord, 0, nextReviewDate, DateTime.UtcNow));
+
+		// Act
+		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, nextReviewDate, DateTime.UtcNow);
+
+		// Assert
+		Assert.False(cardResult.IsSuccess);
 	}
 
 	[Fact]
-	public void Card_ThrowsArgumentOutOfRangeException_WhenPreviousCorrectReviewIsInTheFuture()
+	public void Card_ReturnsFailure_WhenPreviousCorrectReviewIsInTheFuture()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var originalWord = "Hello";
 		var translatedWord = "Hola";
 		var previousCorrectReview = DateTime.UtcNow.AddDays(1);
-		// Act & Assert
-		Assert.Throws<ArgumentOutOfRangeException>(() => new Card(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), previousCorrectReview));
+
+		// Act
+		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), previousCorrectReview);
+
+		// Assert
+		Assert.False(cardResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, cardResult.Status);
 	}
 
 	[Fact]
-	public void Card_ThrowsArgumentOutOfRangeException_WhenReviewStreakIsNegative()
+	public void Card_ReturnsFailure_WhenReviewStreakIsNegative()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var originalWord = "Hello";
 		var translatedWord = "Hola";
 
-		// Act & Assert
-		Assert.Throws<ArgumentOutOfRangeException>(() => new Card(deckId, originalWord, translatedWord, -1, DateTime.UtcNow.AddDays(1), DateTime.UtcNow));
+		// Act
+		var cardResult = Card.Create(deckId, originalWord, translatedWord, -1, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+
+		// Assert
+		Assert.False(cardResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, cardResult.Status);
 	}
 
 	[Fact]
 	public void SetNextReviewDate_UpdatesNextReviewDate()
 	{
 		// Arrange
-		var card = new Card(Guid.NewGuid(), Guid.NewGuid(), "Hello", "Hola");
+		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		Assert.True(cardResult.IsSuccess);
+		var card = cardResult.Value;
 		var newReviewDate = DateTime.UtcNow.AddDays(2);
 
 		// Act
@@ -152,17 +191,22 @@ public class CardTests
 	public void SetNextReviewDate_ThrowsArgumentOutOfRangeException_WhenDateIsInThePast()
 	{
 		// Arrange
-		var card = new Card(Guid.NewGuid(), Guid.NewGuid(), "Hello", "Hola");
+		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		Assert.True(cardResult.IsSuccess);
+		var card = cardResult.Value;
 		var pastDate = DateTime.UtcNow.AddDays(-1);
+
 		// Act & Assert
 		Assert.Throws<ArgumentOutOfRangeException>(() => card.SetNextReviewDate(pastDate));
-	}	
+	}
 
 	[Fact]
 	public void SetPreviousCorrectReview_UpdatesPreviousCorrectReview()
 	{
 		// Arrange
-		var card = new Card(Guid.NewGuid(), Guid.NewGuid(), "Hello", "Hola");
+		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		Assert.True(cardResult.IsSuccess);
+		var card = cardResult.Value;
 		var newPreviousReviewDate = DateTime.UtcNow.AddDays(-1);
 
 		// Act
@@ -176,8 +220,11 @@ public class CardTests
 	public void SetPreviousCorrectReview_ThrowsArgumentOutOfRangeException_WhenDateIsInTheFuture()
 	{
 		// Arrange
-		var card = new Card(Guid.NewGuid(), Guid.NewGuid(), "Hello", "Hola");
+		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		Assert.True(cardResult.IsSuccess);
+		var card = cardResult.Value;
 		var futureDate = DateTime.UtcNow.AddDays(1);
+
 		// Act & Assert
 		Assert.Throws<ArgumentOutOfRangeException>(() => card.SetPreviousCorrectReview(futureDate));
 	}
@@ -186,7 +233,9 @@ public class CardTests
 	public void SetCorrectReviewStreak_UpdatesCorrectReviewStreak()
 	{
 		// Arrange
-		var card = new Card(Guid.NewGuid(), Guid.NewGuid(), "Hello", "Hola");
+		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		Assert.True(cardResult.IsSuccess);
+		var card = cardResult.Value;
 		var newStreak = 5;
 
 		// Act
@@ -200,7 +249,9 @@ public class CardTests
 	public void SetCorrectReviewStreak_ThrowsArgumentOutOfRangeException_WhenStreakIsNegative()
 	{
 		// Arrange
-		var card = new Card(Guid.NewGuid(), Guid.NewGuid(), "Hello", "Hola");
+		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		Assert.True(cardResult.IsSuccess);
+		var card = cardResult.Value;
 
 		// Act & Assert
 		Assert.Throws<ArgumentOutOfRangeException>(() => card.SetCorrectReviewStreak(-1));

@@ -77,17 +77,32 @@ public class DeckRepository(RepetifyDbContext context) : RepositoryBase(context)
 
 		return deckEntity is null ?
 			ResultFactory.NotFound<Deck>($"Unable to find a deck with Id {deckId}.")
-			: ResultFactory.Success(deckEntity.ToDomain());
+			: deckEntity.ToDomain();
 	}
 
 	/// <inheritdoc/>
 	public async Task<Result<IEnumerable<Deck>>> GetDecksByUserIdAsync(Guid userId)
 	{
-		var decks = await _context.Decks.Where(d => d.UserId == userId)
+		List<Deck> decks = new();
+		List<string> errors = new();
+		foreach (var deckResult in await _context.Decks.Where(d => d.UserId == userId)
 					.AsNoTracking()
-					.Select(d => d.ToDomain())
-					.ToListAsync()
-					.ConfigureAwait(false);
+					.Select(d => d.ToDomain()).ToListAsync().ConfigureAwait(false))
+		{
+			if (!deckResult.IsSuccess)
+			{
+				errors.Add(deckResult.ErrorMessage!);
+			}
+			else
+			{
+				decks.Add(deckResult.Value);
+			}
+		}
+
+		if (errors.Count > 0)
+		{
+			return ResultFactory.AggregatedErrors<IEnumerable<Deck>>(errors.ToArray());
+		}
 
 		return ResultFactory.Success(decks.AsEnumerable());
 	}
@@ -157,7 +172,7 @@ public class DeckRepository(RepetifyDbContext context) : RepositoryBase(context)
 
 		return cardEntity is null ?
 			ResultFactory.NotFound<Card>($"Unable to find a card with Id {cardId} in the deck with Id {deckId}.")
-			: ResultFactory.Success(cardEntity.ToDomain());
+			: cardEntity.ToDomain();
 	}
 
 	/// <inheritdoc/>
@@ -179,14 +194,32 @@ public class DeckRepository(RepetifyDbContext context) : RepositoryBase(context)
 			return ResultFactory.InvalidArgument<IEnumerable<Card>>("Pge size should be greater than 1.");
 		}
 
-		var cards = await _context.Cards.Where(c => c.DeckId == deckId)
+		List<Card> cards = new();
+		List<string> errors = new();
+
+		foreach (var cardResult in await _context.Cards.Where(c => c.DeckId == deckId)
 			.OrderBy(c => c.NextReviewDate)
 			.Skip((page - 1) * pageSize)
 			.Take(pageSize)
 			.AsNoTracking()
 			.Select(c => c.ToDomain())
 			.ToListAsync()
-			.ConfigureAwait(false);
+			.ConfigureAwait(false))
+		{
+			if (!cardResult.IsSuccess)
+			{
+				errors.Add(cardResult.ErrorMessage!);
+			}
+			else
+			{
+				cards.Add(cardResult.Value);
+			}
+		}
+
+		if (errors.Count > 0)
+		{
+			return ResultFactory.AggregatedErrors<IEnumerable<Card>>(errors.ToArray());
+		}
 
 		return ResultFactory.Success(cards.AsEnumerable());
 	}
@@ -199,6 +232,8 @@ public class DeckRepository(RepetifyDbContext context) : RepositoryBase(context)
 			return ResultFactory.InvalidArgument<(IEnumerable<Card>, int?)>("Pge size should be greater than 1.");
 		}
 
+		List<Card> cards = new();
+		List<string> errors = new();
 		int? count = cursor is null ?
 			await _context.Cards.CountAsync(c => c.DeckId == deckId && c.NextReviewDate <= until).ConfigureAwait(false)
 			: null;
@@ -210,13 +245,27 @@ public class DeckRepository(RepetifyDbContext context) : RepositoryBase(context)
 			query = query.Where(c => c.NextReviewDate > cursor);
 		}
 
-		var cards = await query
+		foreach (var cardResult in await query
 			.OrderBy(c => c.NextReviewDate)
 			.Take(pageSize)
 			.AsNoTracking()
 			.Select(c => c.ToDomain())
-			.ToListAsync().ConfigureAwait(false);
+			.ToListAsync().ConfigureAwait(false))
+		{
+			if (!cardResult.IsSuccess)
+			{
+				errors.Add(cardResult.ErrorMessage!);
+			}
+			else {
+				cards.Add(cardResult.Value);
+			}
+		}
 
+		if (errors.Count > 0)
+		{
+			return ResultFactory.AggregatedErrors<(IEnumerable<Card>, int?)>(errors.ToArray());
+		}
+		
 		return ResultFactory.Success((cards.AsEnumerable(), count));
 	}
 

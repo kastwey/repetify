@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Repetify.Domain\Repetify.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Time\" />
+  </ItemGroup>
+
 </Project>

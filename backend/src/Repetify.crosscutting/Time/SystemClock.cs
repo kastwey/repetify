@@ -1,6 +1,6 @@
-﻿using Repetify.Domain.Abstractions;
+﻿using Repetify.Crosscutting.Abstractions;
 
-namespace Repetify.Infrastructure.Time;
+namespace Repetify.Crosscutting.Time;
 
 public class SystemClock : IClock
 {

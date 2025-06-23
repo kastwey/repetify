@@ -25,19 +25,19 @@ public static class ResultFactory
 	/// <param name="errors">The optional error message.</param>
 	/// <returns>An <see cref="Result"/> with a not found status.</returns>
 	public static Result NotFound(params string[] errors) => new(ResultStatus.NotFound, errors);
-	
+
 	/// <summary>
 	/// Creates an <see cref="Result{T}"/> with a not found status and an optional error message.
 	/// </summary>
 	/// <typeparam name="T">The type of the value.</typeparam>
-	/// <param name="errorMessage">The optional error message.</param>
+	/// <param name="errors">The optional error message.</param>
 	/// <returns>An <see cref="Result{T}"/> with a not found status.</returns>
 	public static Result<T> NotFound<T>(params string[] errors) => new Result<T>(ResultStatus.NotFound, errors, default(T));
 
 	/// <summary>
 	/// Creates an <see cref="Result"/> with an invalid argument status and an optional error message.
 	/// </summary>
-	/// <param name="errorMessage">The optional error message.</param>
+	/// <param name="errors">The optional error message.</param>
 	/// <returns>An <see cref="Result"/> with an invalid argument status.</returns>
 	public static Result InvalidArgument(params string[] errors) => new(ResultStatus.InvalidArguments, errors);
 
@@ -45,29 +45,55 @@ public static class ResultFactory
 	/// Creates an <see cref="Result{T}"/> with an invalid argument status and an error message.
 	/// </summary>
 	/// <typeparam name="T">The type of the value.</typeparam>
-	/// <param name="errorMessage">The error message of the result.</param>
+	/// <param name="errors">The error message of the result.</param>
 	/// <returns>An <see cref="Result{T}"/> with an invalid argument status.</returns>
 	public static Result<T> InvalidArgument<T>(params string[] errors) => new(ResultStatus.InvalidArguments, errors);
 
 	/// <summary>
-	/// Creates an <see cref="Result{T}"/> with an Conflict status and an error message.
+	/// Creates an <see cref="Result"/> with a conflict status and an error message.
 	/// </summary>
-	/// <typeparam name="T">The type of the value.</typeparam>
-	/// <param name="errorMessage">The error message of the result.</param>
-	/// <returns>An <see cref="Result{T}"/> with an Conflict status.</returns>
+	/// <param name="errors">The error message of the result.</param>
+	/// <returns>An <see cref="Result"/> with a conflict status.</returns>
 	public static Result Conflict(params string[] errors) => new(ResultStatus.Conflict, errors);
 
 	/// <summary>
-	/// Creates an <see cref="Result{T}"/> with an Conflict status and an error message.
+	/// Creates an <see cref="Result{T}"/> with a conflict status and an error message.
 	/// </summary>
 	/// <typeparam name="T">The type of the value.</typeparam>
-	/// <param name="errorMessage">The error message of the result.</param>
-	/// <returns>An <see cref="Result{T}"/> with an Conflict status.</returns>
+	/// <param name="errors">The error message of the result.</param>
+	/// <returns>An <see cref="Result{T}"/> with a conflict status.</returns>
 	public static Result<T> Conflict<T>(params string[] errors) => new(ResultStatus.Conflict, errors);
 
+	/// <summary>
+	/// Creates an <see cref="Result"/> with a business rule violated status and an error message.
+	/// </summary>
+	/// <param name="errors">The error message(s) of the result.</param>
+	/// <returns>An <see cref="Result"/> with a business rule violated status.</returns>
 	public static Result BusinessRuleViolated(params string[] errors) => new(ResultStatus.BusinessRuleViolated, errors);
-	
+
+	/// <summary>
+	/// Creates an <see cref="Result{T}"/> with a business rule violated status and an error message.
+	/// </summary>
+	/// <typeparam name="T">The type of the value.</typeparam>
+	/// <param name="errors">The error message(s) of the result.</param>
+	/// <returns>An <see cref="Result{T}"/> with a business rule violated status.</returns>
 	public static Result<T> BusinessRuleViolated<T>(params string[] errors) => new(ResultStatus.BusinessRuleViolated, errors);
+
+	/// <summary>
+	/// Creates an <see cref="Result"/> with an aggregated errors status and error messages.
+	/// </summary>
+	/// <param name="errors">The error messages of the result.</param>
+	/// <returns>An <see cref="Result"/> with an aggregated errors status.</returns>
+	public static Result AggregatedErrors(params string[] errors) => new(ResultStatus.AggregatedErrors, errors);
+
+	/// <summary>
+	/// Creates an <see cref="Result{T}"/> with an aggregated errors status and error messages.
+	/// </summary>
+	/// <typeparam name="T">The type of the value.</typeparam>
+	/// <param name="errors">The error messages of the result.</param>
+	/// <returns>An <see cref="Result{T}"/> with an aggregated errors status.</returns>
+	public static Result<T> AggregatedErrors<T>(params string[] errors) => new(ResultStatus.AggregatedErrors, errors);
+
 
 	/// <summary>
 	/// Creates a <see cref="Result{T}"/> from an existing <see cref="IResult"/> instance.
@@ -80,14 +106,13 @@ public static class ResultFactory
 	public static Result<T> PropagateFailure<T>(IResult result)
 	{
 		EnsureIsValidToPropagate(result);
-		
+
 		return new Result<T>(result.Status, result.ErrorMessage);
 	}
 
 	/// <summary>
-	/// Creates a <see cref="Result{T}"/> from an existing <see cref="IResult"/> instance.
+	/// Creates a <see cref="Result"/> from an existing <see cref="IResult"/> instance.
 	/// </summary>
-	/// <typeparam name="T">The type of the value for the resulting <see cref="Result{T}"/>.</typeparam>
 	/// <param name="result">The existing <see cref="IResult"/> instance to convert.</param>
 	/// <returns>A new <see cref="Result"/> with the same status and error message as the provided <see cref="IResult"/>.</returns>
 	/// <exception cref="ArgumentNullException">Thrown if the <paramref name="result"/> is null.</exception>

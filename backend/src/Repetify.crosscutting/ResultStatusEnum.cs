@@ -30,6 +30,11 @@ public enum ResultStatus
 	BusinessRuleViolated,
 
 	/// <summary>
+	/// Indicates that multiple errors have been aggregated.
+	/// </summary>
+	AggregatedErrors,
+
+	/// <summary>
 	///  Unknown status, typically used when the status cannot be determined or is not applicable.
 	/// </summary>
 	Unknown,

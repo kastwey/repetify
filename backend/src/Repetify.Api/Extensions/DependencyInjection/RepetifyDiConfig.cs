@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+
 using Repetify.Api.Constants;
 using Repetify.Application.Abstractions.Services;
 using Repetify.Application.Config;
@@ -12,13 +13,13 @@ using Repetify.AuthPlatform.Config;
 using Repetify.AuthPlatform.Config.Google;
 using Repetify.AuthPlatform.Config.Microsoft;
 using Repetify.AuthPlatform.IdentityProviders;
-using Repetify.Domain.Abstractions;
+using Repetify.Crosscutting.Abstractions;
+using Repetify.Crosscutting.Time;
 using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Abstractions.Services;
 using Repetify.Domain.Services;
 using Repetify.Infrastructure.Persistence.EfCore.Context;
 using Repetify.Infrastructure.Persistence.EfCore.Repositories;
-using Repetify.Infrastructure.Time;
 
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;

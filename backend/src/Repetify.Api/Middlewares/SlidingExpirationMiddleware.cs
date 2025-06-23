@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Repetify.Api.Constants;
 using Repetify.AuthPlatform.Abstractions;
+using Repetify.Crosscutting.Abstractions;
 using Repetify.Domain.Abstractions;
 using System.Diagnostics.CodeAnalysis;
 using System.IdentityModel.Tokens.Jwt;

@@ -3,6 +3,7 @@ using Xunit;
 using Repetify.Domain.Entities;
 using Repetify.Infrastructure.Persistence.EfCore.Entities;
 using Repetify.Infrastructure.Persistence.EfCore.Extensions.Mappers;
+using Repetify.Testing.Extensions;
 
 namespace Repetify.Infrastructure.Persistence.EfCore.UnitTests.Extensions.Mappers;
 
@@ -14,14 +15,14 @@ public class DeckExtensionsTests
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var userId = Guid.NewGuid();
-		var deck = new Deck(
+		var deck = Deck.TryCreate(
 			id: deckId,
 			name: "Spanish Vocabulary",
 			description: "Basic Spanish words",
 			userId: userId,
 			originalLanguage: "Spanish",
 			translatedLanguage: "English"
-		);
+		).AssertIsSuccess();
 
 		// Act
 		var entity = deck.ToDataEntity();
@@ -51,7 +52,7 @@ public class DeckExtensionsTests
 		};
 
 		// Act
-		var domain = deckEntity.ToDomain();
+		var domain = deckEntity.ToDomain().AssertIsSuccess();
 
 		// Assert
 		Assert.NotNull(domain);
@@ -96,14 +97,14 @@ public class DeckExtensionsTests
 			TranslatedLanguage = "Old Translated Language"
 		};
 
-		var deckDomain = new Deck(
+		var deckDomain = Deck.TryCreate(
 			id: deckEntity.Id,
 			name: "Updated Name",
 			description: "Updated Description",
 			userId: deckEntity.UserId,
 			originalLanguage: "Updated Language",
 			translatedLanguage: "Updated Translated Language"
-		);
+		).AssertIsSuccess();
 
 		// Act
 		deckEntity.UpdateFromDomain(deckDomain);
@@ -129,14 +130,14 @@ public class DeckExtensionsTests
 			OriginalLanguage = "English",
 			TranslatedLanguage = "Spanish",
 		} : null;
-		Deck? deck = !domainIsNull ? new Deck(
+		Deck? deck = !domainIsNull ? Deck.TryCreate(
 			id: Guid.NewGuid(),
 			name: "Test Name",
 			description: "Test Description",
 			userId: Guid.NewGuid(),
 			originalLanguage: "English",
 			translatedLanguage: "English"
-		) : null;
+		).AssertIsSuccess() : null;
 
 		// Act & Assert
 		var exception = Assert.Throws<ArgumentNullException>(() => deckEntity!.UpdateFromDomain(deck!));

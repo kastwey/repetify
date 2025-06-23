@@ -1,6 +1,6 @@
 ﻿using Moq;
 
-using Repetify.Domain.Abstractions;
+using Repetify.Crosscutting.Abstractions;
 using Repetify.Domain.Entities;
 using Repetify.Domain.Services;
 
@@ -21,7 +21,7 @@ public class CardReviewServiceTests
 	public void UpdateReview_Should_Increment_Streak_And_Adjust_NextReviewDate_When_Correct()
 	{
 		// Arrange
-		var card = new Card(Guid.NewGuid(), Guid.NewGuid(), "Hello", "Hola");
+		var card = CreateCard();
 		var cardReviewService = new CardReviewService(_clockMock.Object);
 
 		// Act
@@ -37,7 +37,7 @@ public class CardReviewServiceTests
 	public void UpdateReview_Should_Reset_Streak_And_Set_NextReviewDate_When_Incorrect()
 	{
 		// Arrange
-		var card = new Card(Guid.NewGuid(), Guid.NewGuid(), "Hello", "Hola");
+		var card = CreateCard();
 		var cardReviewService = new CardReviewService(_clockMock.Object);
 
 		cardReviewService.UpdateReview(card, true);
@@ -54,7 +54,7 @@ public class CardReviewServiceTests
 	public void UpdateReview_Should_Use_Streak_For_NextReviewDate_Calculation()
 	{
 		// Arrange
-		var card = new Card(Guid.NewGuid(), Guid.NewGuid(), "Hello", "Hola");
+		var card = CreateCard();
 		var cardReviewService = new CardReviewService(_clockMock.Object);
 		var today = _clockMock.Object.UtcNow;
 
@@ -68,5 +68,12 @@ public class CardReviewServiceTests
 		// Assert
 		Assert.Equal(today.AddDays(1), nextReview1);
 		Assert.Equal(today.AddDays(2), nextReview2);
+	}
+
+	private static Card CreateCard()
+	{
+		var cardResult = Card.Create(Guid.NewGuid(), Guid.NewGuid(), "Hello", "Hola");
+		Assert.True(cardResult.IsSuccess);
+		return cardResult.Value;
 	}
 }

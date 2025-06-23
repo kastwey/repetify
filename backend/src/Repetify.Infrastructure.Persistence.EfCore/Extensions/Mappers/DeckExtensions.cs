@@ -1,4 +1,5 @@
-﻿using Repetify.Domain.Entities;
+﻿using Repetify.Crosscutting;
+using Repetify.Domain.Entities;
 using Repetify.Infrastructure.Persistence.EfCore.Entities;
 
 namespace Repetify.Infrastructure.Persistence.EfCore.Extensions.Mappers;
@@ -33,11 +34,11 @@ public static class DeckExtensions
 	/// </summary>
 	/// <param name="deckEntity">The DeckEntity.</param>
 	/// <returns>The corresponding Deck domain model, or null if the entity is null.</returns>
-	public static Deck ToDomain(this DeckEntity deckEntity)
+	public static Result<Deck> ToDomain(this DeckEntity deckEntity)
 	{
 		ArgumentNullException.ThrowIfNull(deckEntity);
 
-		return new Deck(
+		return Deck.TryCreate(
 			id: deckEntity.Id,
 			name: deckEntity.Name,
 			description: deckEntity.Description,

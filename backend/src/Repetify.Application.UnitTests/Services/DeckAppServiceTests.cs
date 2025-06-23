@@ -12,6 +12,7 @@ using Repetify.Crosscutting;
 using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Abstractions.Services;
 using Repetify.Domain.Entities;
+using Repetify.Testing.Extensions;
 
 using Xunit;
 
@@ -502,8 +503,8 @@ public class DeckAppServiceTests
 	}
 
 	private Deck CreateDeck(Guid? userId = null) =>
-	new Deck(_deckId, "Deck", "Desc", userId ?? _userId, "en", "es");
+	Deck.TryCreate(_deckId, "Deck", "Desc", userId ?? _userId, "en", "es").AssertIsSuccess();
 
 	private Card CreateCard(Guid? deckId = null) =>
-		new Card(_cardId, deckId ?? _deckId, "hello", "hola", 0, DateTime.UtcNow.AddDays(1), DateTime.MinValue);
+		Card.Create(_cardId, deckId ?? _deckId, "hello", "hola", 0, DateTime.UtcNow.AddDays(1), DateTime.MinValue).AssertIsSuccess();
 }

@@ -1,4 +1,4 @@
-﻿using Repetify.Domain.Abstractions;
+﻿using Repetify.Crosscutting.Abstractions;
 using Repetify.Domain.Abstractions.Services;
 using Repetify.Domain.Entities;
 
@@ -36,12 +36,12 @@ public class CardReviewService : ICardReviewService
 			card.SetPreviousCorrectReview(_clock.UtcNow, _clock.UtcNow);
 
 			// Adjust next review date based on streak
-			card.SetNextReviewDate(CalculateNextReviewDate(card), _clock.UtcNow);
+			card.SetNextReviewDate(CalculateNextReviewDate(card));
 		}
 		else
 		{
 			card.SetCorrectReviewStreak(0);
-			card.SetNextReviewDate(_clock.UtcNow.AddDays(1), _clock.UtcNow); // Reset to review tomorrow
+			card.SetNextReviewDate(_clock.UtcNow.AddDays(1)); // Reset to review tomorrow
 		}
 	}
 

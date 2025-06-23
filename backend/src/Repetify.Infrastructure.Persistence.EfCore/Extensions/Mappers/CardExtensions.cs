@@ -1,4 +1,5 @@
-﻿using Repetify.Domain.Entities;
+﻿using Repetify.Crosscutting;
+using Repetify.Domain.Entities;
 using Repetify.Infrastructure.Persistence.EfCore.Entities;
 
 namespace Repetify.Infrastructure.Persistence.EfCore.Extensions.Mappers;
@@ -35,11 +36,11 @@ public static class CardExtensions
 	/// </summary>
 	/// <param name="cardEntity">The CardEntity data object to map.</param>
 	/// <returns>A Card domain object.</returns>
-	public static Card ToDomain(this CardEntity cardEntity)
+	public static Result<Card> ToDomain(this CardEntity cardEntity)
 	{
 		ArgumentNullException.ThrowIfNull(cardEntity);
 
-		return new Card(
+		return Card.RehidrateFromPersistence(
 			id: cardEntity.Id,
 			deckId: cardEntity.DeckId,
 			originalWord: cardEntity.OriginalWord,

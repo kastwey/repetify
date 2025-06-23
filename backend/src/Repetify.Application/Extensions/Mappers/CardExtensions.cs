@@ -1,4 +1,5 @@
 ﻿using Repetify.Application.Dtos;
+using Repetify.Crosscutting;
 using Repetify.Domain.Entities;
 
 namespace Repetify.Application.Extensions.Mappers;
@@ -47,11 +48,11 @@ public static class CardExtensions
 	/// <param name="cardId">The unique identifier for the card (optional).</param>
 	/// <returns>A Card domain entity representing the CardDto object.</returns>
 	/// <exception cref="ArgumentNullException">Thrown when the cardDto is null.</exception>
-	public static Card ToEntity(this AddOrUpdateCardDto cardDto, Guid deckId, Guid? cardId = null)
+	public static Result<Card> ToEntity(this AddOrUpdateCardDto cardDto, Guid deckId, Guid? cardId = null)
 	{
 		ArgumentNullException.ThrowIfNull(cardDto);
 
-		return new Card(
+		return Card.Create(
 			id: cardId,
 			deckId: deckId,
 			originalWord: cardDto.OriginalWord!,

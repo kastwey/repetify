@@ -1,4 +1,4 @@
-﻿namespace Repetify.Domain.Abstractions;
+﻿namespace Repetify.Crosscutting.Abstractions;
 
 /// <summary>
 /// Interface for providing the current UTC date and time.

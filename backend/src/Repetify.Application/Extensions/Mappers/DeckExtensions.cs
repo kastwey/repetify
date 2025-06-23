@@ -1,4 +1,5 @@
 ﻿using Repetify.Application.Dtos;
+using Repetify.Crosscutting;
 using Repetify.Domain.Entities;
 
 namespace Repetify.Application.Extensions.Mappers;
@@ -23,11 +24,11 @@ public static class DeckExtensions
 	{		return decks is null ? throw new ArgumentNullException(nameof(decks)) : decks.Select(deck => deck.ToDto());
 	}
 
-	public static Deck ToEntity(this AddOrUpdateDeckDto deckDto, Guid userId, Guid? deckId = null)
+	public static Result<Deck> ToEntity(this AddOrUpdateDeckDto deckDto, Guid userId, Guid? deckId = null)
 	{
 		ArgumentNullException.ThrowIfNull(deckDto);
 
-		return new(
+		return Deck.TryCreate(
 				id: deckId,
 				name: deckDto.Name!,
 				description: deckDto.Description,

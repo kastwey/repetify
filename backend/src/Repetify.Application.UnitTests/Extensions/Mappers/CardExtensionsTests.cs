@@ -3,6 +3,8 @@ using Repetify.Application.Extensions.Mappers;
 using Repetify.Domain.Entities;
 
 using Xunit;
+using Repetify.Testing.Extensions;
+using Repetify.Crosscutting.Extensions;
 
 namespace Repetify.Application.UnitTests.Extensions.Mappers;
 
@@ -14,7 +16,7 @@ public class CardExtensionTests
 	public void ToDto_ShouldReturnCardDto_WhenCardIsValid()
 	{
 		// Arrange
-		var card = new Card(
+		var card = Card.Create(
 			id: Guid.NewGuid(),
 			deckId: Guid.NewGuid(),
 			originalWord: "Hello",
@@ -22,7 +24,7 @@ public class CardExtensionTests
 			correctReviewStreak: 2,
 			nextReviewDate: DateTime.UtcNow.AddDays(1),
 			previousCorrectReview: DateTime.UtcNow.AddDays(-1)
-		);
+		).AssertIsSuccess();
 
 		// Act
 		var result = card.ToDto();
@@ -58,8 +60,8 @@ public class CardExtensionTests
 		// Arrange
 		var cards = new List<Card>
 		{
-			new(Guid.NewGuid(), Guid.NewGuid(), "Word1", "Traduccion1", 1, DateTime.UtcNow.AddDays(2), DateTime.UtcNow),
-			new(Guid.NewGuid(), Guid.NewGuid(), "Word2", "Traduccion2", 0, DateTime.UtcNow.AddDays(3), DateTime.UtcNow.AddDays(-1))
+			Card.Create(Guid.NewGuid(), Guid.NewGuid(), "Word1", "Traduccion1", 1, DateTime.UtcNow.AddDays(2), DateTime.UtcNow).AssertIsSuccess(),
+			Card.Create(Guid.NewGuid(), Guid.NewGuid(), "Word2", "Traduccion2", 0, DateTime.UtcNow.AddDays(3), DateTime.UtcNow.AddDays(-1)).EnsureSuccess()
 		};
 
 		// Act
@@ -118,7 +120,7 @@ public class CardExtensionTests
 		var dto = new AddOrUpdateCardDto { OriginalWord = "Hola", TranslatedWord = "Hello" };
 
 		// Act
-		var result = dto.ToEntity(deckId, cardId);
+		var result = dto.ToEntity(deckId, cardId).AssertIsSuccess();
 
 		// Assert
 		Assert.NotNull(result);

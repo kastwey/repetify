@@ -1,4 +1,6 @@
-﻿using Repetify.Domain.Entities;
+﻿using Repetify.Crosscutting;
+using Repetify.Domain.Entities;
+using Repetify.Testing.Extensions;
 
 using System;
 using System.Collections.Generic;
@@ -22,7 +24,7 @@ public class DeckTests
 		var originalLanguage = "English";
 		var translatedLanguage = "Spanish";
 		// Act
-		var deck = new Deck(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
+		var deck = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage).AssertIsSuccess();
 
 		// Assert
 		Assert.NotNull(deck);
@@ -45,7 +47,9 @@ public class DeckTests
 		var translatedLanguage = "Spanish";
 
 		// Act & Assert
-		Assert.Throws<ArgumentNullException>(() => new Deck(deckName!, deckDescription, userId, originalLanguage, translatedLanguage));
+		var deckResult = Deck.TryCreate(deckName!, deckDescription, userId, originalLanguage, translatedLanguage);
+		Assert.False(deckResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 
 	[Fact]
@@ -59,7 +63,9 @@ public class DeckTests
 		var translatedLanguage = "Spanish";
 
 		// Act & Assert
-		Assert.Throws<ArgumentException>(() => new Deck(deckName, deckDescription, userId, originalLanguage, translatedLanguage));
+		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
+		Assert.False(deckResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 
 	[Fact]
@@ -72,7 +78,9 @@ public class DeckTests
 		var originalLanguage = "English";
 		var translatedLanguage = "Spanish";
 		// Act & Assert
-		Assert.Throws<ArgumentException>(() => new Deck(deckName, deckDescription, userId, originalLanguage, translatedLanguage));
+		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
+		Assert.False(deckResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 
 	[Fact]
@@ -86,7 +94,7 @@ public class DeckTests
 		var translatedLanguage = "Spanish";
 
 		// Act
-		var deck = new Deck(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
+		var deck = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage).AssertIsSuccess();
 
 		// Assert
 		Assert.NotNull(deck);
@@ -105,7 +113,9 @@ public class DeckTests
 		var translatedLanguage = "Spanish";
 
 		// Act & Assert
-		Assert.Throws<ArgumentNullException>(() => new Deck(deckName, deckDescription, userId, originalLanguage!, translatedLanguage));
+		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage!, translatedLanguage);
+		Assert.False(deckResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 
 	[Fact]
@@ -119,7 +129,9 @@ public class DeckTests
 		var translatedLanguage = "Spanish";
 
 		// Act & Assert
-		Assert.Throws<ArgumentException>(() => new Deck(deckName, deckDescription, userId, originalLanguage, translatedLanguage));
+		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
+		Assert.False(deckResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 
 	[Fact]
@@ -133,7 +145,9 @@ public class DeckTests
 		var translatedLanguage = "Spanish";
 
 		// Act & Assert
-		Assert.Throws<ArgumentException>(() => new Deck(deckName, deckDescription, userId, originalLanguage, translatedLanguage));
+		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
+		Assert.False(deckResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 
 	[Fact]
@@ -147,7 +161,9 @@ public class DeckTests
 		string? translatedLanguage = null;
 
 		// Act & Assert
-		Assert.Throws<ArgumentNullException>(() => new Deck(deckName, deckDescription, userId, originalLanguage, translatedLanguage!));
+		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage!);
+		Assert.False(deckResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 
 	[Fact]
@@ -161,7 +177,9 @@ public class DeckTests
 		var translatedLanguage = string.Empty;
 
 		// Act & Assert
-		Assert.Throws<ArgumentException>(() => new Deck(deckName, deckDescription, userId, originalLanguage, translatedLanguage));
+		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
+		Assert.False(deckResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 
 	[Fact]
@@ -174,6 +192,8 @@ public class DeckTests
 		var originalLanguage = "English";
 		var translatedLanguage = "   ";
 		// Act & Assert
-		Assert.Throws<ArgumentException>(() => new Deck(deckName, deckDescription, userId, originalLanguage, translatedLanguage));
+		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
+		Assert.False(deckResult.IsSuccess);
+		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 }

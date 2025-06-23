@@ -1,6 +1,8 @@
 ﻿using Moq;
 
 using Repetify.Crosscutting;
+using Repetify.Crosscutting.Extensions;
+using Repetify.Testing.Extensions;
 using Repetify.Domain.Abstractions.Repositories;
 using Repetify.Domain.Entities;
 using Repetify.Domain.Services;
@@ -33,13 +35,13 @@ public class DeckValidatorTests
 
 		var validator = new DeckValidator(mockDeckRepository.Object);
 
-		var deck = new Deck(
+		var deck = Deck.TryCreate(
 			name: "DuplicateName",
 			description: "Deck Desc",
 			userId: Guid.NewGuid(),
 			originalLanguage: "English",
 			translatedLanguage: "Spanish"
-		);
+		).AssertIsSuccess();
 
 		// Act
 		var result = await validator.EnsureIsValidAsync(deck);
@@ -60,13 +62,13 @@ public class DeckValidatorTests
 
 		var validator = new DeckValidator(mockDeckRepository.Object);
 
-		var deck = new Deck(
+		var deck = Deck.TryCreate(
 			name: "UniqueName",
 			description: "Some description",
 			userId: Guid.NewGuid(),
 			originalLanguage: "English",
 			translatedLanguage: "Spanish"
-		);
+		).AssertIsSuccess();
 
 		// Act
 		var result = await validator.EnsureIsValidAsync(deck);

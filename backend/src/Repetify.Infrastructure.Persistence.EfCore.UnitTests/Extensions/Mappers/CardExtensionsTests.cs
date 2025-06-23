@@ -1,6 +1,7 @@
 ﻿using Repetify.Domain.Entities;
 using Repetify.Infrastructure.Persistence.EfCore.Entities;
 using Repetify.Infrastructure.Persistence.EfCore.Extensions.Mappers;
+using Repetify.Testing.Extensions;
 
 namespace Repetify.Infrastructure.Persistence.EfCore.UnitTests.Extensions.Mappers;
 
@@ -10,7 +11,7 @@ public class CardExtensionsTests
 	public void ToEntity_ShouldMapCorrectly()
 	{
 		// Arrange
-		var card = new Card(
+		var card = Card.Create(
 			id: Guid.NewGuid(),
 			deckId: Guid.NewGuid(),
 			originalWord: "Hola",
@@ -18,7 +19,7 @@ public class CardExtensionsTests
 			correctReviewStreak: 5,
 			nextReviewDate: DateTime.UtcNow.AddDays(1),
 			previousCorrectReview: DateTime.UtcNow.AddDays(-1)
-		);
+		).AssertIsSuccess();
 
 		// Act
 		var entity = card.ToDataEntity();
@@ -50,7 +51,7 @@ public class CardExtensionsTests
 		};
 
 		// Act
-		var domain = cardEntity.ToDomain();
+		var domain = cardEntity.ToDomain().AssertIsSuccess();
 
 		// Assert
 		Assert.NotNull(domain);
@@ -99,7 +100,7 @@ public class CardExtensionsTests
 			PreviousCorrectReview = DateTime.UtcNow.AddDays(-1)
 		};
 
-		var updatedCard = new Card(
+		var updatedCard = Card.Create(
 			id: cardEntity.Id,
 			deckId: cardEntity.DeckId,
 			originalWord: "Bonjour",
@@ -107,7 +108,7 @@ public class CardExtensionsTests
 			correctReviewStreak: 5,
 			nextReviewDate: DateTime.UtcNow.AddDays(3),
 			previousCorrectReview: DateTime.UtcNow.AddDays(-2)
-		);
+		).AssertIsSuccess();
 
 		// Act  
 		cardEntity.UpdateFromDomain(updatedCard);
@@ -139,7 +140,7 @@ public class CardExtensionsTests
 			PreviousCorrectReview = DateTime.UtcNow.AddDays(-1)
 		};
 
-		Card? updatedCard = domainEntityIsNull ? null : new Card(
+		Card? updatedCard = domainEntityIsNull ? null : Card.Create(
 			id: Guid.NewGuid(),
 			deckId: Guid.NewGuid(),
 			originalWord: "Bonjour",
@@ -147,7 +148,7 @@ public class CardExtensionsTests
 			correctReviewStreak: 5,
 			nextReviewDate: DateTime.UtcNow.AddDays(3),
 			previousCorrectReview: DateTime.UtcNow.AddDays(-2)
-		);
+		).AssertIsSuccess();
 
 		// Act & Assert
 		var exception = Assert.Throws<ArgumentNullException>(() => cardEntity!.UpdateFromDomain(updatedCard!));

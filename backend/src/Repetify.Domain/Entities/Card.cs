@@ -1,4 +1,5 @@
 ﻿using Repetify.Crosscutting;
+using Repetify.Crosscutting.Time;
 
 using System;
 using System.Collections.Generic;
@@ -59,11 +60,21 @@ public class Card
 		PreviousCorrectReview = previousCorrectReview;
 	}
 
-	/// <summary>
+	public static Result<Card> Create(
+		Guid? id,
+		Guid deckId,
+		string originalWord,
+		string translatedWord,
+		int correctReviewStreak = 0,
+		DateTime? nextReviewDate = null,
+		DateTime? previousCorrectReview = null) =>
+		Create(id, deckId, originalWord, translatedWord, correctReviewStreak, nextReviewDate, previousCorrectReview, true);
+
+
+		/// <summary>
 	/// Attempts to create a new Card instance, returning a Result<Card> indicating success or failure.
 	/// </summary>
-	public static Result<Card> TryCreate(
-		Guid? id,
+	public static Result<Card> Create(
 		Guid deckId,
 		string originalWord,
 		string translatedWord,
@@ -71,70 +82,16 @@ public class Card
 		DateTime? nextReviewDate = null,
 		DateTime? previousCorrectReview = null)
 	{
-		var errors = new List<string>();
-
-		if (string.IsNullOrWhiteSpace(originalWord))
-		{
-			errors.Add("Original word cannot be null or whitespace.");
-		}
-
-		if (string.IsNullOrWhiteSpace(translatedWord))
-		{
-			errors.Add("Translated word cannot be null or whitespace.");
-		}
-
-		if (correctReviewStreak < 0)
-		{
-			errors.Add("Correct review streak cannot be negative.");
-		}
-
-		var now = DateTime.UtcNow;
-		var nextReview = nextReviewDate ?? now.AddDays(1);
-		var prevCorrect = previousCorrectReview ?? DateTime.MinValue;
-
-		if (nextReview < now)
-		{
-			errors.Add("Next review date cannot be in the past.");
-		}
-
-		if (prevCorrect > now)
-		{
-			errors.Add("Previous correct review date cannot be in the future.");
-		}
-
-		if (errors.Count > 0)
-		{
-			return ResultFactory.BusinessRuleViolated<Card>(errors.ToArray());
-		}
-
-		var card = new Card(
-			id ?? Guid.NewGuid(),
-			deckId,
-			originalWord,
-			translatedWord,
-			correctReviewStreak,
-			nextReview,
-			prevCorrect
-		);
-
-		return ResultFactory.Success(card);
+		return Create(null, deckId, originalWord, translatedWord, correctReviewStreak, nextReviewDate, previousCorrectReview);
 	}
 
 	/// <summary>
 	/// Sets the next review date for the card.
 	/// </summary>
 	/// <param name="nextReviewDate">The date and time when the card is next due for review.</param>
-	/// <param name="currentDate">The current date and time, used for validation. Defaults to the current UTC time if not provided.</param>
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="nextReviewDate"/> is in the past relative to <paramref name="currentDate"/>.</exception>
-	public void SetNextReviewDate(DateTime nextReviewDate, DateTime? currentDate = null)
+	public void SetNextReviewDate(DateTime nextReviewDate)
 	{
-		currentDate ??= DateTime.UtcNow;
-
-		if (nextReviewDate < currentDate)
-		{
-			throw new ArgumentOutOfRangeException(nameof(nextReviewDate), "Next review date cannot be in the past.");
-		}
-
 		NextReviewDate = nextReviewDate;
 	}
 
@@ -146,7 +103,7 @@ public class Card
 	/// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="previousCorrectReview"/> is in the future relative to <paramref name="currentDate"/>.</exception>
 	public void SetPreviousCorrectReview(DateTime previousCorrectReview, DateTime? currentDate = null)
 	{
-		currentDate ??= DateTime.UtcNow;
+		currentDate ??= Clock.Current.UtcNow;
 
 		if (previousCorrectReview > currentDate)
 		{
@@ -166,5 +123,80 @@ public class Card
 		ArgumentOutOfRangeException.ThrowIfNegative(correctReviewStreak);
 
 		CorrectReviewStreak = correctReviewStreak;
+	}
+
+	internal static Result<Card> RehidrateFromPersistence(
+		Guid? id,
+		Guid deckId,
+		string originalWord,
+		string translatedWord,
+		int correctReviewStreak = 0,
+		DateTime? nextReviewDate = null,
+		DateTime? previousCorrectReview = null) =>
+		Create(id, deckId, originalWord, translatedWord, correctReviewStreak, nextReviewDate, previousCorrectReview, false);
+
+	/// <summary>
+	/// Attempts to create a new Card instance, returning a Result<Card> indicating success or failure.
+	/// </summary>
+	private static Result<Card> Create(
+		Guid? id,
+		Guid deckId,
+		string originalWord,
+		string translatedWord,
+		int correctReviewStreak = 0,
+		DateTime? nextReviewDate = null,
+		DateTime? previousCorrectReview = null,
+		bool validateDates = true)
+	{
+		var errors = new List<string>();
+
+		if (string.IsNullOrWhiteSpace(originalWord))
+		{
+			errors.Add("Original word cannot be null or whitespace.");
+		}
+
+		if (string.IsNullOrWhiteSpace(translatedWord))
+		{
+			errors.Add("Translated word cannot be null or whitespace.");
+		}
+
+		if (correctReviewStreak < 0)
+		{
+			errors.Add("Correct review streak cannot be negative.");
+		}
+
+		var now = Clock.Current.UtcNow;
+		var nextReview = nextReviewDate ?? now.AddDays(1);
+		var prevCorrect = previousCorrectReview ?? DateTime.MinValue;
+
+		if (validateDates)
+		{
+			if (nextReview < now)
+			{
+				errors.Add("Next review date cannot be in the past.");
+			}
+
+			if (prevCorrect > now)
+			{
+				errors.Add("Previous correct review date cannot be in the future.");
+			}
+		}
+
+		if (errors.Count > 0)
+		{
+			return ResultFactory.BusinessRuleViolated<Card>(errors.ToArray());
+		}
+
+		var card = new Card(
+			id ?? Guid.NewGuid(),
+			deckId,
+			originalWord,
+			translatedWord,
+			correctReviewStreak,
+			nextReview,
+			prevCorrect
+		);
+
+		return ResultFactory.Success(card);
 	}
 }

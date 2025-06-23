@@ -35,7 +35,7 @@ public class DeckAppService : IDeckAppService
 	{
 		try
 		{
-			var deckDomain = deck.ToEntity(userId);
+			var deckDomain = deck.ToEntity(userId).EnsureSuccess();
 			await _deckValidator.EnsureIsValidAsync(deckDomain).EnsureSuccessAsync().ConfigureAwait(false);
 			await _deckRepository.AddDeckAsync(deckDomain).EnsureSuccessAsync().ConfigureAwait(false);
 			await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
@@ -54,7 +54,7 @@ public class DeckAppService : IDeckAppService
 		try
 		{
 			await CheckUserPermissionAsync(deckId, userId).EnsureSuccessAsync().ConfigureAwait(false);
-			var deckDomain = deck.ToEntity(userId, deckId);
+			var deckDomain = deck.ToEntity(userId, deckId).EnsureSuccess();
 			await _deckValidator.EnsureIsValidAsync(deckDomain).EnsureSuccessAsync().ConfigureAwait(false);
 			await _deckRepository.UpdateDeckAsync(deckDomain).EnsureSuccessAsync().ConfigureAwait(false);
 			await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
@@ -114,7 +114,7 @@ public class DeckAppService : IDeckAppService
 		try
 		{
 			await CheckUserPermissionAsync(deckId, userId).EnsureSuccessAsync().ConfigureAwait(false);
-			var cardDomain = card.ToEntity(deckId);
+			var cardDomain = card.ToEntity(deckId).EnsureSuccess();
 			await _deckRepository.AddCardAsync(cardDomain).EnsureSuccessAsync().ConfigureAwait(false);
 			await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
 			return ResultFactory.Success(cardDomain.Id);
@@ -130,7 +130,8 @@ public class DeckAppService : IDeckAppService
 		try
 		{
 			await CheckUserPermissionAsync(deckId, userId).EnsureSuccessAsync().ConfigureAwait(false);
-			await _deckRepository.UpdateCardAsync(card.ToEntity(deckId, cardId)).EnsureSuccessAsync().ConfigureAwait(false);
+			var cardEntity = card.ToEntity(deckId, cardId).EnsureSuccess();
+			await _deckRepository.UpdateCardAsync(cardEntity).EnsureSuccessAsync().ConfigureAwait(false);
 			await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
 			return ResultFactory.Success();
 		}

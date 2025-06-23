@@ -1,6 +1,7 @@
 ﻿using Repetify.Application.Dtos;
 using Repetify.Application.Extensions.Mappers;
 using Repetify.Domain.Entities;
+using Repetify.Testing.Extensions;
 
 using Xunit;
 
@@ -14,14 +15,14 @@ public class DeckExtensionsTests
 	public void ToDto_ShouldReturnDeckDto_WhenDeckIsValid()
 	{
 		// Arrange
-		var deck = new Deck(
+		var deck = Deck.TryCreate(
 			id: Guid.NewGuid(),
 			name: "My Deck",
 			description: "Test description",
 			userId: Guid.NewGuid(),
 			originalLanguage: "English",
 			translatedLanguage: "Spanish"
-		);
+		).AssertIsSuccess();
 
 		// Act
 		var result = deck.ToDto();
@@ -56,8 +57,8 @@ public class DeckExtensionsTests
 		// Arrange
 		var decks = new List<Deck>
 		{
-			new(name: "Deck 1", description: "Desc1", userId: Guid.NewGuid(), originalLanguage: "En", translatedLanguage: "Es"),
-			new(name: "Deck 2", description: "Desc2", userId: Guid.NewGuid(), originalLanguage: "Fr", translatedLanguage: "Es")
+			Deck.TryCreate(name: "Deck 1", description: "Desc1", userId: Guid.NewGuid(), originalLanguage: "En", translatedLanguage: "Es").AssertIsSuccess(),
+			Deck.TryCreate(name: "Deck 2", description: "Desc2", userId: Guid.NewGuid(), originalLanguage: "Fr", translatedLanguage: "Es").AssertIsSuccess()
 		};
 
 		// Act
@@ -121,16 +122,16 @@ public class DeckExtensionsTests
 		};
 
 		// Act
-		var result = dto.ToEntity(userId, deckId);
+		var entity = dto.ToEntity(userId, deckId).AssertIsSuccess();
 
 		// Assert
-		Assert.NotNull(result);
-		Assert.Equal(deckId, result.Id);
-		Assert.Equal(dto.Name, result.Name);
-		Assert.Equal(dto.Description, result.Description);
-		Assert.Equal(userId, result.UserId);
-		Assert.Equal(dto.OriginalLanguage, result.OriginalLanguage);
-		Assert.Equal(dto.TranslatedLanguage, result.TranslatedLanguage);
+		Assert.NotNull(entity);
+		Assert.Equal(deckId, entity.Id);
+		Assert.Equal(dto.Name, entity.Name);
+		Assert.Equal(dto.Description, entity.Description);
+		Assert.Equal(userId, entity.UserId);
+		Assert.Equal(dto.OriginalLanguage, entity.OriginalLanguage);
+		Assert.Equal(dto.TranslatedLanguage, entity.TranslatedLanguage);
 	}
 
 	[Fact]
