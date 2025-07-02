@@ -257,7 +257,7 @@ public class DeckRepositoryTests
 		// Assert
 		Assert.True(cardsResult.IsSuccess);
 		Assert.Single(cardsResult.Value!);
-		Assert.Equal("Word1", cardsResult.Value!.First().OriginalWord);
+		Assert.Equal("Word1", cardsResult.Value!.First().Front);
 	}
 
 	[Fact]
@@ -298,9 +298,9 @@ public class DeckRepositoryTests
 		(await repository.AddCardAsync(card)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
-		var storedCard = await dbContext.Cards.FirstOrDefaultAsync(c => c.OriginalWord == "Hola");
+		var storedCard = await dbContext.Cards.FirstOrDefaultAsync(c => c.Front == "Hola");
 		Assert.NotNull(storedCard);
-		Assert.Equal("Hello", storedCard.TranslatedWord);
+		Assert.Equal("Hello", storedCard.Back);
 	}
 
 	[Fact]
@@ -326,8 +326,8 @@ public class DeckRepositoryTests
 		// Assert
 		var updatedCard = await dbContext.Cards.FirstOrDefaultAsync(c => c.Id == card.Id);
 		Assert.NotNull(updatedCard);
-		Assert.Equal("Updated Word", updatedCard.OriginalWord);
-		Assert.Equal("Updated Translation", updatedCard.TranslatedWord);
+		Assert.Equal("Updated Word", updatedCard.Front);
+		Assert.Equal("Updated Translation", updatedCard.Back);
 	}
 
 	[Fact]
@@ -389,7 +389,7 @@ public class DeckRepositoryTests
 		// Assert
 		Assert.NotNull(retrievedCardResult);
 		Assert.True(retrievedCardResult.IsSuccess);
-		Assert.Equal("Auto", retrievedCardResult.Value!.OriginalWord);
+		Assert.Equal("Auto", retrievedCardResult.Value!.Front);
 	}
 
 	[Fact]

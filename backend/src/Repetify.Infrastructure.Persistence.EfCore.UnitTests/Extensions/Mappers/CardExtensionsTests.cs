@@ -14,8 +14,8 @@ public class CardExtensionsTests
 		var card = Card.Create(
 			id: Guid.NewGuid(),
 			deckId: Guid.NewGuid(),
-			originalWord: "Hola",
-			translatedWord: "Hello",
+			front: "Hola",
+			back: "Hello",
 			correctReviewStreak: 5,
 			nextReviewDate: DateTime.UtcNow.AddDays(1),
 			previousCorrectReview: DateTime.UtcNow.AddDays(-1)
@@ -28,8 +28,8 @@ public class CardExtensionsTests
 		Assert.NotNull(entity);
 		Assert.Equal(card.Id, entity.Id);
 		Assert.Equal(card.DeckId, entity.DeckId);
-		Assert.Equal(card.OriginalWord, entity.OriginalWord);
-		Assert.Equal(card.TranslatedWord, entity.TranslatedWord);
+		Assert.Equal(card.Front, entity.Front);
+		Assert.Equal(card.Back, entity.Back);
 		Assert.Equal(card.CorrectReviewStreak, entity.CorrectReviewStreak);
 		Assert.Equal(card.NextReviewDate, entity.NextReviewDate);
 		Assert.Equal(card.PreviousCorrectReview, entity.PreviousCorrectReview);
@@ -43,8 +43,8 @@ public class CardExtensionsTests
 		{
 			Id = Guid.NewGuid(),
 			DeckId = Guid.NewGuid(),
-			OriginalWord = "Bonjour",
-			TranslatedWord = "Hello",
+			Front = "Bonjour",
+			Back = "Hello",
 			CorrectReviewStreak = 3,
 			NextReviewDate = DateTime.UtcNow.AddDays(2),
 			PreviousCorrectReview = DateTime.UtcNow.AddDays(-3)
@@ -56,8 +56,8 @@ public class CardExtensionsTests
 		// Assert
 		Assert.NotNull(domain);
 		Assert.Equal(cardEntity.Id, domain.Id);
-		Assert.Equal(cardEntity.OriginalWord, domain.OriginalWord);
-		Assert.Equal(cardEntity.TranslatedWord, domain.TranslatedWord);
+		Assert.Equal(cardEntity.Front, domain.Front);
+		Assert.Equal(cardEntity.Back, domain.Back);
 		Assert.Equal(cardEntity.CorrectReviewStreak, domain.CorrectReviewStreak);
 		Assert.Equal(cardEntity.NextReviewDate, domain.NextReviewDate);
 		Assert.Equal(cardEntity.PreviousCorrectReview, domain.PreviousCorrectReview);
@@ -93,8 +93,8 @@ public class CardExtensionsTests
 		{
 			Id = Guid.NewGuid(),
 			DeckId = Guid.NewGuid(),
-			OriginalWord = "Hola",
-			TranslatedWord = "Hello",
+			Front = "Hola",
+			Back = "Hello",
 			CorrectReviewStreak = 2,
 			NextReviewDate = DateTime.UtcNow.AddDays(1),
 			PreviousCorrectReview = DateTime.UtcNow.AddDays(-1)
@@ -103,8 +103,8 @@ public class CardExtensionsTests
 		var updatedCard = Card.Create(
 			id: cardEntity.Id,
 			deckId: cardEntity.DeckId,
-			originalWord: "Bonjour",
-			translatedWord: "Hi",
+			front: "Bonjour",
+			back: "Hi",
 			correctReviewStreak: 5,
 			nextReviewDate: DateTime.UtcNow.AddDays(3),
 			previousCorrectReview: DateTime.UtcNow.AddDays(-2)
@@ -116,8 +116,8 @@ public class CardExtensionsTests
 		// Assert  
 		Assert.Equal(updatedCard.Id, cardEntity.Id);
 		Assert.Equal(updatedCard.DeckId, cardEntity.DeckId);
-		Assert.Equal(updatedCard.OriginalWord, cardEntity.OriginalWord);
-		Assert.Equal(updatedCard.TranslatedWord, cardEntity.TranslatedWord);
+		Assert.Equal(updatedCard.Front, cardEntity.Front);
+		Assert.Equal(updatedCard.Back, cardEntity.Back);
 		Assert.Equal(updatedCard.CorrectReviewStreak, cardEntity.CorrectReviewStreak);
 		Assert.Equal(updatedCard.NextReviewDate, cardEntity.NextReviewDate);
 		Assert.Equal(updatedCard.PreviousCorrectReview, cardEntity.PreviousCorrectReview);
@@ -133,8 +133,8 @@ public class CardExtensionsTests
 		{
 			Id = Guid.NewGuid(),
 			DeckId = Guid.NewGuid(),
-			OriginalWord = "Hola",
-			TranslatedWord = "Hello",
+			Front = "Hola",
+			Back = "Hello",
 			CorrectReviewStreak = 2,
 			NextReviewDate = DateTime.UtcNow.AddDays(1),
 			PreviousCorrectReview = DateTime.UtcNow.AddDays(-1)
@@ -143,8 +143,8 @@ public class CardExtensionsTests
 		Card? updatedCard = domainEntityIsNull ? null : Card.Create(
 			id: Guid.NewGuid(),
 			deckId: Guid.NewGuid(),
-			originalWord: "Bonjour",
-			translatedWord: "Hi",
+			front: "Bonjour",
+			back: "Hi",
 			correctReviewStreak: 5,
 			nextReviewDate: DateTime.UtcNow.AddDays(3),
 			previousCorrectReview: DateTime.UtcNow.AddDays(-2)

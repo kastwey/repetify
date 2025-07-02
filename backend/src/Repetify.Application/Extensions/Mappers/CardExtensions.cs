@@ -22,8 +22,8 @@ public static class CardExtensions
 		return new CardDto(
 			id: card.Id,
 			deckId: card.DeckId,
-			originalWord: card.OriginalWord,
-			translatedWord: card.TranslatedWord,
+			originalWord: card.Front,
+			translatedWord: card.Back,
 			correctReviewStreak: card.CorrectReviewStreak,
 			nextReviewDate: card.NextReviewDate,
 			previousCorrectReview: card.PreviousCorrectReview
@@ -55,8 +55,8 @@ public static class CardExtensions
 		return Card.Create(
 			id: cardId,
 			deckId: deckId,
-			originalWord: cardDto.OriginalWord!,
-			translatedWord: cardDto.TranslatedWord!
+			front: cardDto.OriginalWord!,
+			back: cardDto.TranslatedWord!
 		);
 	}
 }

@@ -19,8 +19,8 @@ public class CardExtensionTests
 		var card = Card.Create(
 			id: Guid.NewGuid(),
 			deckId: Guid.NewGuid(),
-			originalWord: "Hello",
-			translatedWord: "Hola",
+			front: "Hello",
+			back: "Hola",
 			correctReviewStreak: 2,
 			nextReviewDate: DateTime.UtcNow.AddDays(1),
 			previousCorrectReview: DateTime.UtcNow.AddDays(-1)
@@ -33,8 +33,8 @@ public class CardExtensionTests
 		Assert.NotNull(result);
 		Assert.Equal(card.Id, result.Id);
 		Assert.Equal(card.DeckId, result.DeckId);
-		Assert.Equal(card.OriginalWord, result.OriginalWord);
-		Assert.Equal(card.TranslatedWord, result.TranslatedWord);
+		Assert.Equal(card.Front, result.OriginalWord);
+		Assert.Equal(card.Back, result.TranslatedWord);
 		Assert.Equal(card.CorrectReviewStreak, result.CorrectReviewStreak);
 		Assert.Equal(card.NextReviewDate, result.NextReviewDate);
 		Assert.Equal(card.PreviousCorrectReview, result.PreviousCorrectReview);
@@ -75,8 +75,8 @@ public class CardExtensionTests
 		{
 			Assert.Equal(cards[i].Id, result[i].Id);
 			Assert.Equal(cards[i].DeckId, result[i].DeckId);
-			Assert.Equal(cards[i].OriginalWord, result[i].OriginalWord);
-			Assert.Equal(cards[i].TranslatedWord, result[i].TranslatedWord);
+			Assert.Equal(cards[i].Front, result[i].OriginalWord);
+			Assert.Equal(cards[i].Back, result[i].TranslatedWord);
 			Assert.Equal(cards[i].CorrectReviewStreak, result[i].CorrectReviewStreak);
 			Assert.Equal(cards[i].NextReviewDate, result[i].NextReviewDate);
 			Assert.Equal(cards[i].PreviousCorrectReview, result[i].PreviousCorrectReview);
@@ -126,8 +126,8 @@ public class CardExtensionTests
 		Assert.NotNull(result);
 		Assert.Equal(deckId, result.DeckId);
 		Assert.Equal(cardId, result.Id);
-		Assert.Equal(dto.OriginalWord, result.OriginalWord);
-		Assert.Equal(dto.TranslatedWord, result.TranslatedWord);
+		Assert.Equal(dto.OriginalWord, result.Front);
+		Assert.Equal(dto.TranslatedWord, result.Back);
 	}
 
 	[Fact]

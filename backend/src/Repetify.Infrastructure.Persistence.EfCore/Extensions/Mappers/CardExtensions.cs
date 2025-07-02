@@ -23,8 +23,8 @@ public static class CardExtensions
 		{
 			Id = cardDomain.Id,
 			DeckId = cardDomain.DeckId,
-			OriginalWord = cardDomain.OriginalWord,
-			TranslatedWord = cardDomain.TranslatedWord,
+			Front = cardDomain.Front,
+			Back = cardDomain.Back,
 			CorrectReviewStreak = cardDomain.CorrectReviewStreak,
 			NextReviewDate = cardDomain.NextReviewDate,
 			PreviousCorrectReview = cardDomain.PreviousCorrectReview
@@ -43,8 +43,8 @@ public static class CardExtensions
 		return Card.RehidrateFromPersistence(
 			id: cardEntity.Id,
 			deckId: cardEntity.DeckId,
-			originalWord: cardEntity.OriginalWord,
-			translatedWord: cardEntity.TranslatedWord,
+			front: cardEntity.Front,
+			back: cardEntity.Back,
 			correctReviewStreak: cardEntity.CorrectReviewStreak,
 			nextReviewDate: cardEntity.NextReviewDate,
 			previousCorrectReview: cardEntity.PreviousCorrectReview
@@ -61,8 +61,8 @@ public static class CardExtensions
 		ArgumentNullException.ThrowIfNull(cardEntity);
 		ArgumentNullException.ThrowIfNull(card);
 
-		cardEntity.OriginalWord = card.OriginalWord;
-		cardEntity.TranslatedWord = card.TranslatedWord;
+		cardEntity.Front = card.Front;
+		cardEntity.Back = card.Back;
 		cardEntity.CorrectReviewStreak = card.CorrectReviewStreak;
 		cardEntity.NextReviewDate = card.NextReviewDate;
 		cardEntity.PreviousCorrectReview = card.PreviousCorrectReview;

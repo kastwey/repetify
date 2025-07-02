@@ -1,12 +1,15 @@
 ﻿using System.Net.Http.Headers;
 using System.Text.Json;
-using Repetify.AuthPlatform.Abstractions.IdentityProviders;
 using Repetify.AuthPlatform.Config.Microsoft;
 using Repetify.AuthPlatform.Entities.Microsoft;
 using Repetify.AuthPlatform.Exceptions;
 
 using Microsoft.Extensions.Options;
 using System.Diagnostics.CodeAnalysis;
+using Repetify.AuthPlatform.Abstractions;
+using Repetify.Crosscutting.OAuth;
+using Repetify.AuthPlatform.Entities;
+using Repetify.AuthPlatform.Extensions.Mappers;
 
 namespace Repetify.AuthPlatform.IdentityProviders;
 
@@ -14,7 +17,7 @@ namespace Repetify.AuthPlatform.IdentityProviders;
 /// Service for handling Microsoft OAuth authentication and user information retrieval via Microsoft Graph API.
 /// Inherits from <see cref="OAuthService"/> and implements <see cref="IMicrosoftOAuthService"/>.
 /// </summary>
-public sealed class MicrosoftOAuthService : OAuthService, IMicrosoftOAuthService
+public sealed class MicrosoftOAuthService : OAuthService, IOAuthService
 {
 
 	private static JsonSerializerOptions _jsonSerializerOptions = new JsonSerializerOptions
@@ -22,7 +25,7 @@ public sealed class MicrosoftOAuthService : OAuthService, IMicrosoftOAuthService
 		PropertyNamingPolicy = JsonNamingPolicy.CamelCase
 	};
 
-	private readonly MicrosoftOAuthConfig _oauthConfig;
+	private readonly IOptionsMonitor<MicrosoftOAuthConfig> _oauthConfig;
 
 	private readonly HttpClient _httpClient;
 
@@ -31,26 +34,29 @@ public sealed class MicrosoftOAuthService : OAuthService, IMicrosoftOAuthService
 	/// </summary>
 	/// <param name="oauthConfig">The Microsoft OAuth configuration options.</param>
 	/// <param name="httpClientFactory">The HTTP client factory.</param>
-	public MicrosoftOAuthService(IOptionsSnapshot<MicrosoftOAuthConfig> oauthConfig, IHttpClientFactory httpClientFactory) : base(oauthConfig, httpClientFactory)
+	public MicrosoftOAuthService(IOptionsMonitor<MicrosoftOAuthConfig> oauthConfig, IHttpClientFactory httpClientFactory) : base(oauthConfig, httpClientFactory)
 	{
-		_oauthConfig = oauthConfig.Value;
+		_oauthConfig = oauthConfig;
 		_httpClient = httpClientFactory.CreateClient();
 	}
 
+	public IdentityProvider Provider => IdentityProvider.Microsoft;
+
 	///   <inheritdoc/>
 	[SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "We don't need to catch a specific exception because we're only trying to retrieve the response content from an HTTP response. If it's not possible, the reason doesn't matter.")]
-	public async Task<GraphUserResponse> GetUserInfoAsync(string token)
+	public async Task<UserInfo> GetUserInfoAsync(OAuthCodeExchangeResponse codeExchangeResponse)
 	{
+		ArgumentNullException.ThrowIfNull(codeExchangeResponse);
 
 		try
 		{
 			using var message = new HttpRequestMessage
 			{
 				Method = HttpMethod.Get,
-				RequestUri = _oauthConfig.GraphUserInfoUrl
+				RequestUri = _oauthConfig.CurrentValue.GraphUserInfoUrl
 			};
 
-			message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+			message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", codeExchangeResponse.AccessToken);
 			using var response = await _httpClient.SendAsync(message).ConfigureAwait(false);
 			var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
@@ -64,7 +70,7 @@ public sealed class MicrosoftOAuthService : OAuthService, IMicrosoftOAuthService
 				throw new GraphException("Received empty body from Graph.");
 			}
 
-			return JsonSerializer.Deserialize<GraphUserResponse>(responseBody, _jsonSerializerOptions)!;
+			return JsonSerializer.Deserialize<GraphUserResponse>(responseBody, _jsonSerializerOptions)!.ToUserInfo();
 		}
 		catch (Exception ex) when (ex is not GraphException)
 		{

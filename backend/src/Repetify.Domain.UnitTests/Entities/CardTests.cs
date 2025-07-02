@@ -1,10 +1,22 @@
-﻿using Repetify.Crosscutting;
+﻿using Moq;
+
+using Repetify.Crosscutting;
+using Repetify.Crosscutting.Abstractions;
+using Repetify.Crosscutting.Time;
 using Repetify.Domain.Entities;
 
 namespace Repetify.Domain.UnitTests.Entities;
 
-public class CardTests
+public sealed class CardTests : IDisposable
 {
+
+	public CardTests()
+	{
+		var clockMock = new Mock<IClock>();
+		clockMock.SetupGet(p => p.UtcNow).Returns(new DateTime(2025, 1, 1, 0, 0, 0));
+		Clock.Set(clockMock.Object);
+	}
+
 	[Fact]
 	public void Card_Initializes_WhenValidValuesAreProvided()
 	{
@@ -22,8 +34,8 @@ public class CardTests
 		Assert.NotNull(card);
 		Assert.NotEqual(Guid.Empty, card.Id);
 		Assert.Equal(deckId, card.DeckId);
-		Assert.Equal(originalWord, card.OriginalWord);
-		Assert.Equal(translatedWord, card.TranslatedWord);
+		Assert.Equal(originalWord, card.Front);
+		Assert.Equal(translatedWord, card.Back);
 	}
 
 	[Fact]
@@ -217,7 +229,7 @@ public class CardTests
 	}
 
 	[Fact]
-	public void SetPreviousCorrectReview_ThrowsArgumentOutOfRangeException_WhenDateIsInTheFuture()
+	public void SetPreviousCorrectReview_ReturnsUnsuccessfulResult_WhenDateIsInTheFuture()
 	{
 		// Arrange
 		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
@@ -246,7 +258,7 @@ public class CardTests
 	}
 
 	[Fact]
-	public void SetCorrectReviewStreak_ThrowsArgumentOutOfRangeException_WhenStreakIsNegative()
+	public void SetCorrectReviewStreak_ReturnsUnsuccessfulResult_WhenStreakIsNegative()
 	{
 		// Arrange
 		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
@@ -254,6 +266,11 @@ public class CardTests
 		var card = cardResult.Value;
 
 		// Act & Assert
-		Assert.Throws<ArgumentOutOfRangeException>(() => card.SetCorrectReviewStreak(-1));
+		Assert.False(card.SetCorrectReviewStreak(-1).IsSuccess);
+	}
+
+	public void Dispose()
+	{
+		Clock.Reset();
 	}
 }

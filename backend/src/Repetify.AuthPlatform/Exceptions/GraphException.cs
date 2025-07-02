@@ -6,11 +6,11 @@ public class GraphException : OAuthException
 	{
 	}
 
-	public GraphException(string? message) : base(message)
+	public GraphException(string message) : base(message)
 	{
 	}
 
-	public GraphException(string? message, Exception? innerException) : base(message, innerException)
+	public GraphException(string message, Exception innerException) : base(message, innerException)
 	{
 	}
 }

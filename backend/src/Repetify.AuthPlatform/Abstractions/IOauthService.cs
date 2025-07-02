@@ -1,4 +1,5 @@
 ﻿using Repetify.AuthPlatform.Entities;
+using Repetify.Crosscutting.OAuth;
 
 namespace Repetify.AuthPlatform.Abstractions;
 
@@ -7,6 +8,8 @@ namespace Repetify.AuthPlatform.Abstractions;
 /// </summary>
 public interface IOAuthService
 {
+	public IdentityProvider Provider { get; }
+
 	/// <summary>
 	/// Generates the URL for the OAuth authorization code request.
 	/// </summary>
@@ -20,4 +23,5 @@ public interface IOAuthService
 	/// <param name="code">The authorization code received from the OAuth provider.</param>
 	/// <returns>A task that represents the asynchronous operation. The task result contains the OAuth token response.</returns>
 	Task<OAuthCodeExchangeResponse> ExchangeCodeForTokenAsync(string code);
+	Task<UserInfo> GetUserInfoAsync(OAuthCodeExchangeResponse codeExchangeResponse);
 }

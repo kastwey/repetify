@@ -18,11 +18,11 @@ internal sealed class CardConfiguration : IEntityTypeConfiguration<CardEntity>
 	{
 		builder.ToTable("Cards");
 		builder.HasKey(c => c.Id);
-		builder.Property(c => c.OriginalWord)
+		builder.Property(c => c.Front)
 			.IsRequired()
 			.HasMaxLength(500);
 		builder
-			.Property(c => c.TranslatedWord)
+			.Property(c => c.Back)
 			.IsRequired()
 			.HasMaxLength(500);
 	}

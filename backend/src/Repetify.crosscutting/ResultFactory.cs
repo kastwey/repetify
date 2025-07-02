@@ -1,4 +1,6 @@
-﻿namespace Repetify.Crosscutting;
+﻿using System.Runtime.CompilerServices;
+
+namespace Repetify.Crosscutting;
 
 /// <summary>
 /// Factory class for creating <see cref="Result"/> and <see cref="Result{T}"/> instances.
@@ -93,7 +95,6 @@ public static class ResultFactory
 	/// <param name="errors">The error messages of the result.</param>
 	/// <returns>An <see cref="Result{T}"/> with an aggregated errors status.</returns>
 	public static Result<T> AggregatedErrors<T>(params string[] errors) => new(ResultStatus.AggregatedErrors, errors);
-
 
 	/// <summary>
 	/// Creates a <see cref="Result{T}"/> from an existing <see cref="IResult"/> instance.

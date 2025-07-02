@@ -5,7 +5,6 @@ using Repetify.Application.Abstractions.Services;
 using Repetify.Application.Dtos;
 using Repetify.Application.Extensions.Mappers;
 using Repetify.AuthPlatform.Abstractions;
-using Repetify.AuthPlatform.Abstractions.IdentityProviders;
 using Repetify.Crosscutting;
 using Repetify.Crosscutting.OAuth;
 using Repetify.Crosscutting.Exceptions;
@@ -21,8 +20,7 @@ namespace Repetify.Application.Services;
 /// </summary>
 public class UserAppService : IUserAppService
 {
-	private readonly IGoogleOAuthService _googleOAuthService;
-	private readonly IMicrosoftOAuthService _microsoftOAuthService;
+	private readonly IOAuthServiceResolver _oauthServiceResolver;
 	private readonly IJwtService _jwtService;
 	private readonly IUserRepository _userRepository;
 	private readonly FrontendConfig _frontendConfig;
@@ -35,10 +33,9 @@ public class UserAppService : IUserAppService
 	/// <param name="jwtService">The JWT service for token generation.</param>
 	/// <param name="repository">The user repository for user data operations.</param>
 	/// <param name="frontendConfig">The frontend configuration options.</param>
-	public UserAppService(IGoogleOAuthService googleOAuthService, IMicrosoftOAuthService microsoftOAuthService, IJwtService jwtService, IUserRepository repository, IOptionsSnapshot<FrontendConfig> frontendConfig)
+	public UserAppService(IOAuthServiceResolver oauthServiceResolver, IJwtService jwtService, IUserRepository repository, IOptionsSnapshot<FrontendConfig> frontendConfig)
 	{
-		_googleOAuthService = googleOAuthService ?? throw new ArgumentNullException(nameof(googleOAuthService));
-		_microsoftOAuthService = microsoftOAuthService ?? throw new ArgumentNullException(nameof(microsoftOAuthService));
+		_oauthServiceResolver = oauthServiceResolver;
 		_jwtService = jwtService ?? throw new ArgumentNullException(nameof(jwtService));
 		_userRepository = repository ?? throw new ArgumentNullException(nameof(repository));
 		_frontendConfig = frontendConfig?.Value ?? throw new ArgumentNullException(nameof(frontendConfig));
@@ -67,19 +64,22 @@ public class UserAppService : IUserAppService
 			returnUrl = _frontendConfig.FrontendBaseUrl;
 		}
 
-		var redirectUri = provider switch
+		try
 		{
-			IdentityProvider.Google => _googleOAuthService.GetOAuthCodeUrl(returnUrl),
-			IdentityProvider.Microsoft => _microsoftOAuthService.GetOAuthCodeUrl(returnUrl),
-			_ => null
-		};
+			var oauthService = _oauthServiceResolver.GetOAuthService(provider).EnsureSuccess();
+			var redirectUri = oauthService.GetOAuthCodeUrl(returnUrl);
 
-		if (redirectUri is null)
-		{
-			return ResultFactory.InvalidArgument<Uri>("Identity provider not supported.");
+			if (redirectUri is null)
+			{
+				return ResultFactory.InvalidArgument<Uri>("Identity provider not supported.");
+			}
+
+			return ResultFactory.Success(redirectUri);
 		}
-
-		return ResultFactory.Success(redirectUri);
+		catch (ResultFailureException ex)
+		{
+			return ResultFactory.PropagateFailure<Uri>(ex.Result);
+		}
 	}
 
 	/// <inheritdoc/>
@@ -87,26 +87,11 @@ public class UserAppService : IUserAppService
 	{
 		try
 		{
-			string token;
-
-			switch (provider)
-			{
-				case IdentityProvider.Google:
-					var googleTokenResponse = await _googleOAuthService.ExchangeCodeForTokenAsync(code).ConfigureAwait(false);
-					var googleUserInfo = await _googleOAuthService.GetUserInfoAsync(googleTokenResponse.IdToken).ConfigureAwait(false);
-					await CheckAndAddNewUserAsync(googleUserInfo.Email, googleUserInfo.Email).ConfigureAwait(false);
-					token = _jwtService.GenerateJwtToken(googleUserInfo.FamilyName, googleUserInfo.GivenName, googleUserInfo.Email);
-					break;
-				case IdentityProvider.Microsoft:
-					var msTokenResponse = await _microsoftOAuthService.ExchangeCodeForTokenAsync(code).ConfigureAwait(false);
-					var msUserInfo = await _microsoftOAuthService.GetUserInfoAsync(msTokenResponse.AccessToken).ConfigureAwait(false);
-					await CheckAndAddNewUserAsync(msUserInfo.Mail, msUserInfo.Mail).ConfigureAwait(false);
-					token = _jwtService.GenerateJwtToken(msUserInfo.Surname, msUserInfo.GivenName, msUserInfo.Mail);
-					break;
-				default:
-					return ResultFactory.InvalidArgument<FinishedOAuthResponseDto>("This identity provider is not supported.");
-			}
-
+			var oauthService = _oauthServiceResolver.GetOAuthService(provider).EnsureSuccess();
+			var tokenResponse = await oauthService.ExchangeCodeForTokenAsync(code).ConfigureAwait(false);
+			var userInfo = await oauthService.GetUserInfoAsync(tokenResponse).ConfigureAwait(false);
+			await CheckAndAddNewUserAsync(userInfo.Email, userInfo.Email).ConfigureAwait(false);
+			var token = _jwtService.GenerateJwtToken(userInfo.FamilyName, userInfo.GivenName, userInfo.Email);
 			return ResultFactory.Success(new FinishedOAuthResponseDto { JwtToken = token, ReturnUrl = returnUrl ?? _frontendConfig.FrontendBaseUrl });
 		}
 		catch (ResultFailureException ex)

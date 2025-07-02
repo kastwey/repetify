@@ -1,5 +1,4 @@
 ﻿using Repetify.AuthPlatform.Abstractions;
-using Repetify.AuthPlatform.Abstractions.IdentityProviders;
 using Repetify.AuthPlatform.Config;
 using Repetify.AuthPlatform.Entities;
 using Repetify.AuthPlatform.Exceptions;
@@ -16,10 +15,10 @@ namespace Repetify.AuthPlatform;
 /// <summary>
 /// Abstract base class for OAuth services, providing common logic for OAuth code URL generation and token exchange.
 /// </summary>
-public abstract class OAuthService : IOAuthService
+public abstract class OAuthService 
 {
 
-	private readonly OAuthConfig _oauthConfig;
+	private readonly IOptionsMonitor<OAuthConfig> _oauthConfig;
 
 	private readonly HttpClient _httpClient;
 
@@ -28,12 +27,12 @@ public abstract class OAuthService : IOAuthService
 	/// </summary>
 	/// <param name="oauthConfig">The OAuth configuration options.</param>
 	/// <param name="httpClientFactory">The HTTP client factory.</param>
-	protected OAuthService(IOptionsSnapshot<OAuthConfig> oauthConfig, IHttpClientFactory httpClientFactory)
+	protected OAuthService(IOptionsMonitor<OAuthConfig> oauthConfig, IHttpClientFactory httpClientFactory)
 	{
 		ArgumentNullException.ThrowIfNull(oauthConfig);
 		ArgumentNullException.ThrowIfNull(httpClientFactory);
 
-		_oauthConfig = oauthConfig.Value;
+		_oauthConfig = oauthConfig;
 		_httpClient = httpClientFactory.CreateClient();
 	}
 
@@ -46,10 +45,10 @@ public abstract class OAuthService : IOAuthService
 	{
 		var dict = new Dictionary<string, string>
 		{
-			["client_id"] = _oauthConfig.ClientId,
-			["redirect_uri"] = _oauthConfig.RedirectUri.AbsoluteUri,
+			["client_id"] = _oauthConfig.CurrentValue.ClientId,
+			["redirect_uri"] = _oauthConfig.CurrentValue.RedirectUri.AbsoluteUri,
 			["response_type"] = "code",
-			["scope"] = string.Join(' ', _oauthConfig.Scopes),
+			["scope"] = string.Join(' ', _oauthConfig.CurrentValue.Scopes),
 			["access_type"] = "online",
 		};
 
@@ -58,7 +57,7 @@ public abstract class OAuthService : IOAuthService
 			dict.Add("state", returnUrl.AbsoluteUri);
 		}
 
-		return new(_oauthConfig.OAuthCodeUrl + "?" +
+		return new(_oauthConfig.CurrentValue.OAuthCodeUrl + "?" +
 			string.Join(
 				'&',
 				dict.Select(d => $"{d.Key}={WebUtility.UrlEncode(d.Value)}")));
@@ -75,9 +74,9 @@ public abstract class OAuthService : IOAuthService
 	{
 		var form = new Dictionary<string, string>
 		{
-			["client_id"] = _oauthConfig.ClientId,
-			["client_secret"] = _oauthConfig.ClientSecret,
-			["redirect_uri"] = _oauthConfig.RedirectUri.AbsoluteUri,
+			["client_id"] = _oauthConfig.CurrentValue.ClientId,
+			["client_secret"] = _oauthConfig.CurrentValue.ClientSecret,
+			["redirect_uri"] = _oauthConfig.CurrentValue.RedirectUri.AbsoluteUri,
 			["code"] = code,
 			["grant_type"] = "authorization_code"
 		};
@@ -89,7 +88,7 @@ public abstract class OAuthService : IOAuthService
 
 		try
 		{
-			response = await _httpClient.PostAsync(_oauthConfig.OAuthTokenUrl, content).ConfigureAwait(false);
+			response = await _httpClient.PostAsync(_oauthConfig.CurrentValue.OAuthTokenUrl, content).ConfigureAwait(false);
 			responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 		}
 		catch (Exception ex)
