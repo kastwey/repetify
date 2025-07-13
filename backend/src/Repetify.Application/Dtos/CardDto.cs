@@ -23,7 +23,7 @@ public class CardDto
 	public string OriginalWord { get; set; }
 
 	/// <summary>
-	/// Gets or sets the translated word.
+	/// Gets or sets the back.
 	/// </summary>
 	public string TranslatedWord { get; set; }
 
@@ -48,7 +48,7 @@ public class CardDto
 	/// <param name="id">The unique identifier for the card.</param>
 	/// <param name="deckId">The unique identifier for the deck.</param>
 	/// <param name="originalWord">The original word.</param>
-	/// <param name="translatedWord">The translated word.</param>
+	/// <param name="translatedWord">The back.</param>
 	/// <param name="correctReviewStreak">The correct review streak count.</param>
 	/// <param name="nextReviewDate">The date for the next review.</param>
 	/// <param name="previousCorrectReview">The date of the previous correct review.</param>
@@ -73,7 +73,7 @@ public class CardDto
 	/// <param name="id">The unique identifier for the card.</param>
 	/// <param name="deckId">The unique identifier for the deck.</param>
 	/// <param name="originalWord">The original word.</param>
-	/// <param name="translatedWord">The translated word.</param>
+	/// <param name="translatedWord">The back.</param>
 	/// <exception cref="ArgumentException">Thrown when originalWord or translatedWord is null or whitespace.</exception>
 	public CardDto(Guid id, Guid deckId, string originalWord, string translatedWord) : this(id, deckId, originalWord, translatedWord, 0, default(DateTime), default(DateTime))
 	{

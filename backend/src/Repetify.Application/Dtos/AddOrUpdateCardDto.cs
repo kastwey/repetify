@@ -8,16 +8,16 @@ namespace Repetify.Application.Dtos;
 public class AddOrUpdateCardDto
 {
 	/// <summary>
-	/// Gets or sets the original word.
+	/// Gets or sets the front side of the card.
 	/// </summary>
-	[Required(ErrorMessage = "The original word is required.")]
-	[StringLength(500, ErrorMessage = "The original word cannot exceed 500 characters.")]
-	public string? OriginalWord { get; set; }
+	[Required(ErrorMessage = "The front is required.")]
+	[StringLength(500, ErrorMessage = "The front cannot exceed 500 characters.")]
+	public string? Front { get; set; }
 
 	/// <summary>
-	/// Gets or sets the translated word.
+	/// Gets or sets the back.
 	/// </summary>
-	[Required(ErrorMessage = "The translated word is required.")]
-	[StringLength(500, ErrorMessage = "The translated word cannot exceed 500 characters.")]
-	public string? TranslatedWord { get; set; }
+	[Required(ErrorMessage = "The back is required.")]
+	[StringLength(500, ErrorMessage = "The back cannot exceed 500 characters.")]
+	public string? Back { get; set; }
 }

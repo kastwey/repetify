@@ -23,12 +23,6 @@ internal sealed class DeckConfiguration : IEntityTypeConfiguration<DeckEntity>
 			.HasMaxLength(100);
 		builder.Property(d => d.Description)
 			.HasMaxLength(500);
-		builder.Property(d => d.OriginalLanguage)
-			.IsRequired()
-			.HasMaxLength(50);
-		builder.Property(d => d.TranslatedLanguage)
-			.IsRequired()
-			.HasMaxLength(50);
 		builder.HasOne(d => d.User)
 			.WithMany(u => u.Decks)
 			.HasForeignKey(d => d.UserId)

@@ -26,6 +26,9 @@ public static class CardExtensions
 			Front = cardDomain.Front,
 			Back = cardDomain.Back,
 			CorrectReviewStreak = cardDomain.CorrectReviewStreak,
+			Repetitions = cardDomain.Repetitions,
+			Interval = cardDomain.Interval,
+			EaseFactor = cardDomain.EaseFactor,
 			NextReviewDate = cardDomain.NextReviewDate,
 			PreviousCorrectReview = cardDomain.PreviousCorrectReview
 		};
@@ -46,6 +49,9 @@ public static class CardExtensions
 			front: cardEntity.Front,
 			back: cardEntity.Back,
 			correctReviewStreak: cardEntity.CorrectReviewStreak,
+			repetitions: cardEntity.Repetitions,
+			easeFactor: cardEntity.EaseFactor,
+			interval: cardEntity.Interval,
 			nextReviewDate: cardEntity.NextReviewDate,
 			previousCorrectReview: cardEntity.PreviousCorrectReview
 		);

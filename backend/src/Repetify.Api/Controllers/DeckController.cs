@@ -51,9 +51,7 @@ public class DeckController : ControllerBase
 				deckId,
 				deck.Name!,
 				deck.Description,
-				userId,
-				deck.OriginalLanguage!,
-				deck.TranslatedLanguage!);
+				userId);
 
 			return CreatedAtAction(nameof(GetDeckById), new { deckId }, createdDeck);
 		});
@@ -128,8 +126,8 @@ public class DeckController : ControllerBase
 			var createdCard = new CardDto(
 				cardId,
 				deckId,
-				card.OriginalWord!,
-				card.TranslatedWord!
+				card.Front!,
+				card.Back!
 				);
 			return CreatedAtAction(nameof(GetCardById), new { deckId, cardId }, createdCard);
 		});

@@ -60,8 +60,8 @@ public class CardExtensionTests
 		// Arrange
 		var cards = new List<Card>
 		{
-			Card.Create(Guid.NewGuid(), Guid.NewGuid(), "Word1", "Traduccion1", 1, DateTime.UtcNow.AddDays(2), DateTime.UtcNow).AssertIsSuccess(),
-			Card.Create(Guid.NewGuid(), Guid.NewGuid(), "Word2", "Traduccion2", 0, DateTime.UtcNow.AddDays(3), DateTime.UtcNow.AddDays(-1)).EnsureSuccess()
+			Card.Create(Guid.NewGuid(), Guid.NewGuid(), "Word1", "Traduccion1", 1, 0, 2.5, 1, DateTime.UtcNow.AddDays(2), DateTime.UtcNow).AssertIsSuccess(),
+			Card.Create(Guid.NewGuid(), Guid.NewGuid(), "Word2", "Traduccion2", 0, 0, 2.5, 1, DateTime.UtcNow.AddDays(3), DateTime.UtcNow.AddDays(-1)).EnsureSuccess()
 		};
 
 		// Act
@@ -117,7 +117,7 @@ public class CardExtensionTests
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var cardId = Guid.NewGuid();
-		var dto = new AddOrUpdateCardDto { OriginalWord = "Hola", TranslatedWord = "Hello" };
+		var dto = new AddOrUpdateCardDto { Front = "Hola", Back = "Hello" };
 
 		// Act
 		var result = dto.ToEntity(deckId, cardId).AssertIsSuccess();
@@ -126,8 +126,8 @@ public class CardExtensionTests
 		Assert.NotNull(result);
 		Assert.Equal(deckId, result.DeckId);
 		Assert.Equal(cardId, result.Id);
-		Assert.Equal(dto.OriginalWord, result.Front);
-		Assert.Equal(dto.TranslatedWord, result.Back);
+		Assert.Equal(dto.Front, result.Front);
+		Assert.Equal(dto.Back, result.Back);
 	}
 
 	[Fact]

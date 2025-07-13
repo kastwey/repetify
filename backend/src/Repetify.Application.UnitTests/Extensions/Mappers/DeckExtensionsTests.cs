@@ -15,13 +15,11 @@ public class DeckExtensionsTests
 	public void ToDto_ShouldReturnDeckDto_WhenDeckIsValid()
 	{
 		// Arrange
-		var deck = Deck.TryCreate(
+		var deck = Deck.Create(
 			id: Guid.NewGuid(),
 			name: "My Deck",
 			description: "Test description",
-			userId: Guid.NewGuid(),
-			originalLanguage: "English",
-			translatedLanguage: "Spanish"
+			userId: Guid.NewGuid()
 		).AssertIsSuccess();
 
 		// Act
@@ -33,8 +31,6 @@ public class DeckExtensionsTests
 		Assert.Equal(deck.Name, result.Name);
 		Assert.Equal(deck.Description, result.Description);
 		Assert.Equal(deck.UserId, result.UserId);
-		Assert.Equal(deck.OriginalLanguage, result.OriginalLanguage);
-		Assert.Equal(deck.TranslatedLanguage, result.TranslatedLanguage);
 	}
 
 	[Fact]
@@ -57,8 +53,8 @@ public class DeckExtensionsTests
 		// Arrange
 		var decks = new List<Deck>
 		{
-			Deck.TryCreate(name: "Deck 1", description: "Desc1", userId: Guid.NewGuid(), originalLanguage: "En", translatedLanguage: "Es").AssertIsSuccess(),
-			Deck.TryCreate(name: "Deck 2", description: "Desc2", userId: Guid.NewGuid(), originalLanguage: "Fr", translatedLanguage: "Es").AssertIsSuccess()
+			Deck.Create(name: "Deck 1", description: "Desc1", userId: Guid.NewGuid()).AssertIsSuccess(),
+			Deck.Create(name: "Deck 2", description: "Desc2", userId: Guid.NewGuid()).AssertIsSuccess()
 		};
 
 		// Act
@@ -73,8 +69,6 @@ public class DeckExtensionsTests
 			Assert.Equal(decks[i].Name, result[i].Name);
 			Assert.Equal(decks[i].Description, result[i].Description);
 			Assert.Equal(decks[i].UserId, result[i].UserId);
-			Assert.Equal(decks[i].OriginalLanguage, result[i].OriginalLanguage);
-			Assert.Equal(decks[i].TranslatedLanguage, result[i].TranslatedLanguage);
 		}
 	}
 
@@ -117,8 +111,6 @@ public class DeckExtensionsTests
 		var dto = new AddOrUpdateDeckDto { 
 			Name = "New Deck",
 			Description = "New Description",
-			OriginalLanguage = "English",
-			TranslatedLanguage = "Spanish"
 		};
 
 		// Act
@@ -130,8 +122,6 @@ public class DeckExtensionsTests
 		Assert.Equal(dto.Name, entity.Name);
 		Assert.Equal(dto.Description, entity.Description);
 		Assert.Equal(userId, entity.UserId);
-		Assert.Equal(dto.OriginalLanguage, entity.OriginalLanguage);
-		Assert.Equal(dto.TranslatedLanguage, entity.TranslatedLanguage);
 	}
 
 	[Fact]

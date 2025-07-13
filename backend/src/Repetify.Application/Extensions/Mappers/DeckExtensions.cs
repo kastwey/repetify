@@ -14,27 +14,24 @@ public static class DeckExtensions
 			id: deck.Id,
 			name: deck.Name,
 			description: deck.Description,
-			userId: deck.UserId,
-			originalLanguage: deck.OriginalLanguage,
-			translatedLanguage: deck.TranslatedLanguage
+			userId: deck.UserId
 		);
 	}
 
 	public static IEnumerable<DeckDto> ToDtoList(this IEnumerable<Deck> decks)
-	{		return decks is null ? throw new ArgumentNullException(nameof(decks)) : decks.Select(deck => deck.ToDto());
+	{
+		return decks is null ? throw new ArgumentNullException(nameof(decks)) : decks.Select(deck => deck.ToDto());
 	}
 
 	public static Result<Deck> ToEntity(this AddOrUpdateDeckDto deckDto, Guid userId, Guid? deckId = null)
 	{
 		ArgumentNullException.ThrowIfNull(deckDto);
 
-		return Deck.TryCreate(
+		return Deck.Create(
 				id: deckId,
 				name: deckDto.Name!,
 				description: deckDto.Description,
-				userId: userId,
-				originalLanguage: deckDto.OriginalLanguage!,
-				translatedLanguage: deckDto.TranslatedLanguage!
+				userId: userId
 			);
 	}
 }

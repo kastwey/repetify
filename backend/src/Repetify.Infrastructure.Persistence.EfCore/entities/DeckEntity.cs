@@ -13,7 +13,5 @@ public class DeckEntity
     public string? Description { get; set; }
     public Guid UserId { get; set; }
     public UserEntity? User { get; set; }
-    public required string OriginalLanguage { get; set; }
-    public required string TranslatedLanguage { get; set; }
     public ICollection<CardEntity> Cards { get; set; } = new List<CardEntity>();
 }

@@ -31,6 +31,9 @@ public class CardExtensionsTests
 		Assert.Equal(card.Front, entity.Front);
 		Assert.Equal(card.Back, entity.Back);
 		Assert.Equal(card.CorrectReviewStreak, entity.CorrectReviewStreak);
+		Assert.Equal(card.Repetitions, entity.Repetitions);
+		Assert.Equal(card.Interval, entity.Interval);
+		Assert.Equal(card.EaseFactor, entity.EaseFactor);
 		Assert.Equal(card.NextReviewDate, entity.NextReviewDate);
 		Assert.Equal(card.PreviousCorrectReview, entity.PreviousCorrectReview);
 	}
@@ -46,6 +49,9 @@ public class CardExtensionsTests
 			Front = "Bonjour",
 			Back = "Hello",
 			CorrectReviewStreak = 3,
+			Repetitions = 4,
+			Interval = 5,
+			EaseFactor = 6,
 			NextReviewDate = DateTime.UtcNow.AddDays(2),
 			PreviousCorrectReview = DateTime.UtcNow.AddDays(-3)
 		};
@@ -59,6 +65,9 @@ public class CardExtensionsTests
 		Assert.Equal(cardEntity.Front, domain.Front);
 		Assert.Equal(cardEntity.Back, domain.Back);
 		Assert.Equal(cardEntity.CorrectReviewStreak, domain.CorrectReviewStreak);
+		Assert.Equal(cardEntity.Repetitions, domain.Repetitions);
+		Assert.Equal(cardEntity.EaseFactor, domain.EaseFactor);
+		Assert.Equal(cardEntity.Interval, domain.Interval);
 		Assert.Equal(cardEntity.NextReviewDate, domain.NextReviewDate);
 		Assert.Equal(cardEntity.PreviousCorrectReview, domain.PreviousCorrectReview);
 	}

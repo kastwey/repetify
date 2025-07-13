@@ -19,18 +19,4 @@ public class AddOrUpdateDeckDto
 	/// </summary>
 	[StringLength(500, ErrorMessage = "The description cannot exceed 500 characters.")]
 	public string? Description { get; set; }
-
-	/// <summary>
-	/// Gets or sets the original language of the deck.
-	/// </summary>
-	[Required(ErrorMessage = "The original language is required.")]
-	[StringLength(50, ErrorMessage = "The original language cannot exceed 50 characters.")]
-	public string? OriginalLanguage { get; set; }
-
-	/// <summary>
-	/// Gets or sets the translated language of the deck.
-	/// </summary>
-	[Required(ErrorMessage = "The translated language is required.")]
-	[StringLength(50, ErrorMessage = "The translated language cannot exceed 50 characters.")]
-	public string? TranslatedLanguage { get; set; }
 }

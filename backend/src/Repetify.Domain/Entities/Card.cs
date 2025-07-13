@@ -6,7 +6,7 @@ using Repetify.Crosscutting.Time;
 namespace Repetify.Domain.Entities;
 
 /// <summary>
-/// Represents a card entity used for language learning, containing information about the original and translated words, review streaks, and review dates.
+/// Represents a card entity used for language learning, containing information about the original and backs, review streaks, and review dates.
 /// </summary>
 public class Card
 {
@@ -102,7 +102,7 @@ public class Card
 					int correctReviewStreak = 0,
 					int repetitions = 0,
 					double easeFactor = MinEaseFactorInSM2, // default value in SM2
-					int interval = 0,
+					int interval = 1,
 					DateTime? nextReviewDate = null,
 					DateTime? previousCorrectReview = null) =>
 					Create(id, deckId, front, back, correctReviewStreak, repetitions, easeFactor, interval, nextReviewDate, previousCorrectReview, true);
@@ -112,7 +112,7 @@ public class Card
 	/// </summary>
 	/// <param name="deckId">The unique identifier of the deck to which the card belongs.</param>
 	/// <param name="front">The original word on the card.</param>
-	/// <param name="back">The translated word on the card.</param>
+	/// <param name="back">The back on the card.</param>
 	/// <param name="correctReviewStreak">The number of consecutive correct reviews for the card. Defaults to 0.</param>
 	/// <param name="repetitions">The number of consecutive successful reviews with a quality rating of 3 or higher (SM-2 algorithm). Defaults to 0.</param>
 	/// <param name="easeFactor">The ease factor used for scheduling the card's reviews. Defaults to 0.3.</param>
@@ -127,7 +127,7 @@ public class Card
 	int correctReviewStreak = 0,
 	int repetitions = 0,
 	double easeFactor = MinEaseFactorInSM2, // default value in SM2
-	int interval = 0,
+	int interval = 1,
 	DateTime? nextReviewDate = null,
 	DateTime? previousCorrectReview = null)
 	{
@@ -321,7 +321,7 @@ public class Card
 			errors.Add(result);
 		}
 
-		if (!ResultValidator.ValidatePositive(correctReviewStreak, out result))
+		if (!ResultValidator.ValidateNotNegative(correctReviewStreak, out result))
 		{
 			errors.Add(result);
 		}

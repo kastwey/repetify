@@ -24,8 +24,6 @@ public static class DeckExtensions
 			Name = deckDomain.Name,
 			Description = deckDomain.Description,
 			UserId = deckDomain.UserId,
-			OriginalLanguage = deckDomain.OriginalLanguage,
-			TranslatedLanguage = deckDomain.TranslatedLanguage
 		};
 	}
 
@@ -38,13 +36,11 @@ public static class DeckExtensions
 	{
 		ArgumentNullException.ThrowIfNull(deckEntity);
 
-		return Deck.TryCreate(
+		return Deck.Create(
 			id: deckEntity.Id,
 			name: deckEntity.Name,
 			description: deckEntity.Description,
-			userId: deckEntity.UserId,
-			originalLanguage: deckEntity.OriginalLanguage,
-			translatedLanguage: deckEntity.TranslatedLanguage
+			userId: deckEntity.UserId
 		);
 	}
 
@@ -61,7 +57,5 @@ public static class DeckExtensions
 		deckEntity.Name = deck.Name;
 		deckEntity.Description = deck.Description;
 		deckEntity.UserId = deck.UserId;
-		deckEntity.OriginalLanguage = deck.OriginalLanguage;
-		deckEntity.TranslatedLanguage = deck.TranslatedLanguage;
 	}
 }

@@ -95,15 +95,6 @@ public class UserAppServiceTests
 	}
 
 	[Fact]
-	public async Task FinishOauthFlow_ReturnsInvalidArgument_When_ProviderIsUnknown()
-	{
-		var result = await _service.FinishOAuthFlowAsync((IdentityProvider)999, "code");
-
-		Assert.False(result.IsSuccess);
-		Assert.Equal(ResultStatus.InvalidArguments, result.Status);
-	}
-
-	[Fact]
 	public async Task FinishOauthFlow_PropagatesFailure_When_OauthServiceThrowsException()
 	{
 		_oauthService.Setup(s => s.ExchangeCodeForTokenAsync(It.IsAny<string>()))

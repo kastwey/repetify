@@ -2,18 +2,21 @@
 
 using Repetify.Crosscutting;
 using Repetify.Crosscutting.Abstractions;
+using Repetify.Crosscutting.Extensions;
 using Repetify.Crosscutting.Time;
 using Repetify.Domain.Entities;
+using Repetify.Testing.Extensions;
 
 namespace Repetify.Domain.UnitTests.Entities;
 
 public sealed class CardTests : IDisposable
 {
-
+	private readonly DateTime _fixedNow = new(2025, 7, 5, 12, 0, 0, DateTimeKind.Utc);
+	
 	public CardTests()
 	{
 		var clockMock = new Mock<IClock>();
-		clockMock.SetupGet(p => p.UtcNow).Returns(new DateTime(2025, 1, 1, 0, 0, 0));
+		clockMock.SetupGet(p => p.UtcNow).Returns(_fixedNow);
 		Clock.Set(clockMock.Object);
 	}
 
@@ -22,32 +25,30 @@ public sealed class CardTests : IDisposable
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
-		var originalWord = "Hello";
-		var translatedWord = "Hola";
+		var front = "Hello";
+		var back = "Hola";
 
 		// Act
-		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var card = Card.Create(deckId, front, back, 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow).EnsureSuccess();
 
 		// Assert
-		Assert.True(cardResult.IsSuccess);
-		var card = cardResult.Value;
 		Assert.NotNull(card);
 		Assert.NotEqual(Guid.Empty, card.Id);
 		Assert.Equal(deckId, card.DeckId);
-		Assert.Equal(originalWord, card.Front);
-		Assert.Equal(translatedWord, card.Back);
+		Assert.Equal(front, card.Front);
+		Assert.Equal(back, card.Back);
 	}
 
 	[Fact]
-	public void Card_ReturnsFailure_WhenOriginalWordIsNull()
+	public void Card_ReturnsFailure_WhenfrontIsNull()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
-		string originalWord = null!;
-		var translatedWord = "Hola";
+		string front = null!;
+		var back = "Hola";
 
 		// Act
-		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(deckId, front, back, 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 
 		// Assert
 		Assert.False(cardResult.IsSuccess);
@@ -55,15 +56,15 @@ public sealed class CardTests : IDisposable
 	}
 
 	[Fact]
-	public void Card_ReturnsFailure_WhenOriginalWordIsEmpty()
+	public void Card_ReturnsFailure_WhenfrontIsEmpty()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
-		var originalWord = string.Empty;
-		var translatedWord = "Hola";
+		var front = string.Empty;
+		var back = "Hola";
 
 		// Act
-		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(deckId, front, back, 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 
 		// Assert
 		Assert.False(cardResult.IsSuccess);
@@ -71,15 +72,15 @@ public sealed class CardTests : IDisposable
 	}
 
 	[Fact]
-	public void Card_ReturnsFailure_WhenOriginalWordIsWhitespace()
+	public void Card_ReturnsFailure_WhenfrontIsWhitespace()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
-		var originalWord = "   ";
-		var translatedWord = "Hola";
+		var front = "   ";
+		var back = "Hola";
 
 		// Act
-		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(deckId, front, back, 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 
 		// Assert
 		Assert.False(cardResult.IsSuccess);
@@ -87,15 +88,15 @@ public sealed class CardTests : IDisposable
 	}
 
 	[Fact]
-	public void Card_ReturnsFailure_WhenTranslatedWordIsNull()
+	public void Card_ReturnsFailure_WhenbackIsNull()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
-		var originalWord = "Hello";
-		string translatedWord = null!;
+		var front = "Hello";
+		string back = null!;
 
 		// Act
-		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(deckId, front, back, 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 
 		// Assert
 		Assert.False(cardResult.IsSuccess);
@@ -103,15 +104,15 @@ public sealed class CardTests : IDisposable
 	}
 
 	[Fact]
-	public void Card_ReturnsFailure_WhenTranslatedWordIsEmpty()
+	public void Card_ReturnsFailure_WhenbackIsEmpty()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
-		var originalWord = "Hello";
-		var translatedWord = string.Empty;
+		var front = "Hello";
+		var back = string.Empty;
 
 		// Act
-		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(deckId, front, back, 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 
 		// Assert
 		Assert.False(cardResult.IsSuccess);
@@ -119,15 +120,15 @@ public sealed class CardTests : IDisposable
 	}
 
 	[Fact]
-	public void Card_ReturnsFailure_WhenTranslatedWordIsWhitespace()
+	public void Card_ReturnsFailure_WhenbackIsWhitespace()
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
-		var originalWord = "Hello";
-		var translatedWord = "   ";
+		var front = "Hello";
+		var back = "   ";
 
 		// Act
-		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(deckId, front, back, 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 
 		// Assert
 		Assert.False(cardResult.IsSuccess);
@@ -139,12 +140,12 @@ public sealed class CardTests : IDisposable
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
-		var originalWord = "Hello";
-		var translatedWord = "Hola";
-		var nextReviewDate = DateTime.UtcNow.AddDays(-1);
+		var front = "Hello";
+		var back = "Hola";
+		var nextReviewDate = _fixedNow.AddDays(-1);
 
 		// Act
-		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, nextReviewDate, DateTime.UtcNow);
+		var cardResult = Card.Create(deckId, front, back, 0, 0, 2.5, 1, nextReviewDate, _fixedNow);
 
 		// Assert
 		Assert.False(cardResult.IsSuccess);
@@ -155,12 +156,12 @@ public sealed class CardTests : IDisposable
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
-		var originalWord = "Hello";
-		var translatedWord = "Hola";
-		var previousCorrectReview = DateTime.UtcNow.AddDays(1);
+		var front = "Hello";
+		var back = "Hola";
+		var previousCorrectReview = _fixedNow.AddDays(1);
 
 		// Act
-		var cardResult = Card.Create(deckId, originalWord, translatedWord, 0, DateTime.UtcNow.AddDays(1), previousCorrectReview);
+		var cardResult = Card.Create(deckId, front, back, 0, 0, 2.5, 1, _fixedNow.AddDays(1), previousCorrectReview);
 
 		// Assert
 		Assert.False(cardResult.IsSuccess);
@@ -172,11 +173,11 @@ public sealed class CardTests : IDisposable
 	{
 		// Arrange
 		var deckId = Guid.NewGuid();
-		var originalWord = "Hello";
-		var translatedWord = "Hola";
+		var front = "Hello";
+		var back = "Hola";
 
 		// Act
-		var cardResult = Card.Create(deckId, originalWord, translatedWord, -1, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(deckId, front, back, -1, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 
 		// Assert
 		Assert.False(cardResult.IsSuccess);
@@ -187,10 +188,10 @@ public sealed class CardTests : IDisposable
 	public void SetNextReviewDate_UpdatesNextReviewDate()
 	{
 		// Arrange
-		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 		Assert.True(cardResult.IsSuccess);
 		var card = cardResult.Value;
-		var newReviewDate = DateTime.UtcNow.AddDays(2);
+		var newReviewDate = _fixedNow.AddDays(2);
 
 		// Act
 		card.SetNextReviewDate(newReviewDate);
@@ -200,26 +201,26 @@ public sealed class CardTests : IDisposable
 	}
 
 	[Fact]
-	public void SetNextReviewDate_ThrowsArgumentOutOfRangeException_WhenDateIsInThePast()
+	public void SetNextReviewDate_ReturnsInvalidARgumentResult_WhenDateIsInThePast()
 	{
 		// Arrange
-		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
-		Assert.True(cardResult.IsSuccess);
-		var card = cardResult.Value;
-		var pastDate = DateTime.UtcNow.AddDays(-1);
+		var card = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, 1, 2.5, 1, _fixedNow.AddDays(1), _fixedNow).AssertIsSuccess();
+		var pastDate = _fixedNow.AddDays(-1);
 
 		// Act & Assert
-		Assert.Throws<ArgumentOutOfRangeException>(() => card.SetNextReviewDate(pastDate));
+		var errorResult = card.SetNextReviewDate(pastDate);
+		Assert.False(errorResult.IsSuccess);
+		Assert.Equal(Crosscutting.ResultStatus.InvalidArguments, errorResult.Status);
 	}
 
 	[Fact]
 	public void SetPreviousCorrectReview_UpdatesPreviousCorrectReview()
 	{
 		// Arrange
-		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 		Assert.True(cardResult.IsSuccess);
 		var card = cardResult.Value;
-		var newPreviousReviewDate = DateTime.UtcNow.AddDays(-1);
+		var newPreviousReviewDate = _fixedNow.AddDays(-1);
 
 		// Act
 		card.SetPreviousCorrectReview(newPreviousReviewDate);
@@ -232,20 +233,20 @@ public sealed class CardTests : IDisposable
 	public void SetPreviousCorrectReview_ReturnsUnsuccessfulResult_WhenDateIsInTheFuture()
 	{
 		// Arrange
-		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
-		Assert.True(cardResult.IsSuccess);
-		var card = cardResult.Value;
-		var futureDate = DateTime.UtcNow.AddDays(1);
+		var card = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, 1, 2.5, 1, _fixedNow.AddDays(1), _fixedNow).EnsureSuccess();
+		var futureDate = _fixedNow.AddDays(1);
 
 		// Act & Assert
-		Assert.Throws<ArgumentOutOfRangeException>(() => card.SetPreviousCorrectReview(futureDate));
+		var errorResult = card.SetPreviousCorrectReview(futureDate);
+		Assert.False(errorResult.IsSuccess);
+		Assert.Equal(ResultStatus.InvalidArguments, errorResult.Status);
 	}
 
 	[Fact]
 	public void SetCorrectReviewStreak_UpdatesCorrectReviewStreak()
 	{
 		// Arrange
-		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 		Assert.True(cardResult.IsSuccess);
 		var card = cardResult.Value;
 		var newStreak = 5;
@@ -261,7 +262,7 @@ public sealed class CardTests : IDisposable
 	public void SetCorrectReviewStreak_ReturnsUnsuccessfulResult_WhenStreakIsNegative()
 	{
 		// Arrange
-		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, DateTime.UtcNow.AddDays(1), DateTime.UtcNow);
+		var cardResult = Card.Create(Guid.NewGuid(), "Hello", "Hola", 0, 0, 2.5, 1, _fixedNow.AddDays(1), _fixedNow);
 		Assert.True(cardResult.IsSuccess);
 		var card = cardResult.Value;
 
@@ -273,4 +274,145 @@ public sealed class CardTests : IDisposable
 	{
 		Clock.Reset();
 	}
+
+	[Fact]
+	public void SetInterval_Should_Set_Valid_Interval()
+	{
+		var card = CreateValidCard();
+		var result = card.SetInterval(5);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal(5, card.Interval);
+	}
+
+	[Fact]
+	public void SetInterval_Should_Fail_For_Negative_Interval()
+	{
+		var card = CreateValidCard();
+		var result = card.SetInterval(-1);
+
+		Assert.False(result.IsSuccess);
+	}
+
+	[Fact]
+	public void SetRepetitions_Should_Set_Valid_Value()
+	{
+		var card = CreateValidCard();
+		var result = card.SetRepetitions(3);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal(3, card.Repetitions);
+	}
+
+	[Fact]
+	public void SetRepetitions_Should_Fail_For_Negative_Value()
+	{
+		var card = CreateValidCard();
+		var result = card.SetRepetitions(-1);
+
+		Assert.False(result.IsSuccess);
+	}
+
+	[Fact]
+	public void SetEaseFactor_Should_Set_Valid_Value()
+	{
+		var card = CreateValidCard();
+		var result = card.SetEaseFactor(2.6);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal(2.6, card.EaseFactor);
+	}
+
+	[Fact]
+	public void SetEaseFactor_Should_Fail_If_Less_Than_Minimum()
+	{
+		var card = CreateValidCard();
+		var result = card.SetEaseFactor(2.4);
+
+		Assert.False(result.IsSuccess);
+	}
+
+	[Theory]
+	[InlineData(5, 0, 1)]
+	[InlineData(5, 1, 6)]
+	[InlineData(5, 2, 15)]
+	public void ApplyReview_Should_Apply_Correct_Logic_For_Correct_Answer(int quality, int repetitionsBefore, int expectedInterval)
+	{
+		var initialInterval = repetitionsBefore switch
+		{
+			1 => 1,
+			2 => 6,
+			3 => 15,
+			_ => 1
+		};
+
+		var card = Card.Create(
+			Guid.NewGuid(),
+			"Front",
+			"Back",
+			correctReviewStreak: 1,
+			repetitions: repetitionsBefore,
+			easeFactor: 2.5,
+			interval: initialInterval,
+			nextReviewDate: _fixedNow.AddDays(1),
+			previousCorrectReview: _fixedNow).AssertIsSuccess();
+
+		var result = card.ApplyReview(quality);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal(repetitionsBefore + 1, card.Repetitions);
+		Assert.Equal(expectedInterval, card.Interval);
+		Assert.True(card.EaseFactor >= 2.5);
+		Assert.Equal(_fixedNow.Date, card.PreviousCorrectReview.Date);
+		Assert.Equal(_fixedNow.AddDays(expectedInterval).Date, card.NextReviewDate.Date);
+	}
+
+	[Fact]
+	public void ApplyReview_Should_Reset_On_Incorrect_Answer()
+	{
+		var card = Card.Create(
+			Guid.NewGuid(),
+			"Front",
+			"Back",
+			correctReviewStreak: 2,
+			repetitions: 2,
+			easeFactor: 2.5,
+			interval: 6,
+			nextReviewDate: _fixedNow.AddDays(1),
+			previousCorrectReview: _fixedNow).Value!;
+
+		var result = card.ApplyReview(2);
+
+		Assert.True(result.IsSuccess);
+		Assert.Equal(0, card.Repetitions);
+		Assert.Equal(0, card.CorrectReviewStreak);
+		Assert.Equal(1, card.Interval);
+		Assert.True(card.EaseFactor >= 2.5);
+		Assert.Equal(_fixedNow.AddDays(1).Date, card.NextReviewDate.Date);
+	}
+
+	[Fact]
+	public void ApplyReview_Should_Fail_If_Quality_Is_Out_Of_Range()
+	{
+		var card = CreateValidCard();
+		var result = card.ApplyReview(0);
+
+		Assert.False(result.IsSuccess);
+	}
+
+	private Card CreateValidCard()
+	{
+		return Card.Create(
+			Guid.NewGuid(),
+			"Front",
+			"Back",
+			correctReviewStreak: 1,
+			repetitions: 1,
+			easeFactor: 2.5,
+			interval: 1,
+			nextReviewDate: _fixedNow.AddDays(1),
+			previousCorrectReview: _fixedNow).Value!;
+	}
+
+
 }

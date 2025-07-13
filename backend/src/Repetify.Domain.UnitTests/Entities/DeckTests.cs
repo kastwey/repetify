@@ -21,10 +21,8 @@ public class DeckTests
 		var deckName = "My test";
 		var deckDescription = "This is a test deck";
 		var userId = Guid.NewGuid();
-		var originalLanguage = "English";
-		var translatedLanguage = "Spanish";
 		// Act
-		var deck = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage).AssertIsSuccess();
+		var deck = Deck.Create(deckName, deckDescription, userId).AssertIsSuccess();
 
 		// Assert
 		Assert.NotNull(deck);
@@ -32,53 +30,45 @@ public class DeckTests
 		Assert.Equal(deckName, deck.Name);
 		Assert.Equal(deckDescription, deck.Description);
 		Assert.Equal(userId, deck.UserId);
-		Assert.Equal(originalLanguage, deck.OriginalLanguage);
-		Assert.Equal(translatedLanguage, deck.TranslatedLanguage);
 	}
 
 	[Fact]
-	public void Deck_ThrowsArgumentNullException_WhenNameIsNull()
+	public void Deck_ReturnsInvalidArgumentResult_WhenNameIsNull()
 	{
 		// Arrange
 		string? deckName = null;
 		var deckDescription = "This is a test deck";
 		var userId = Guid.NewGuid();
-		var originalLanguage = "English";
-		var translatedLanguage = "Spanish";
 
 		// Act & Assert
-		var deckResult = Deck.TryCreate(deckName!, deckDescription, userId, originalLanguage, translatedLanguage);
+		var deckResult = Deck.Create(deckName!, deckDescription, userId);
 		Assert.False(deckResult.IsSuccess);
 		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 
 	[Fact]
-	public void Deck_ThrowsArgumentException_WhenNameIsEmpty()
+	public void Deck_ReturnsInvalidArgumentResult_WhenNameIsEmpty()
 	{
 		// Arrange
 		var deckName = string.Empty;
 		var deckDescription = "This is a test deck";
 		var userId = Guid.NewGuid();
-		var originalLanguage = "English";
-		var translatedLanguage = "Spanish";
 
 		// Act & Assert
-		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
+		var deckResult = Deck.Create(deckName, deckDescription, userId);
 		Assert.False(deckResult.IsSuccess);
 		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
 
 	[Fact]
-	public void Deck_ThrowsArgumentException_WhenNameIsWhitespace()
+	public void Deck_ReturnsInvalidArgumentResult_WhenNameIsWhitespace()
 	{
 		// Arrange
 		var deckName = "   ";
 		var deckDescription = "This is a test deck";
 		var userId = Guid.NewGuid();
-		var originalLanguage = "English";
-		var translatedLanguage = "Spanish";
 		// Act & Assert
-		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
+		var deckResult = Deck.Create(deckName, deckDescription, userId);
 		Assert.False(deckResult.IsSuccess);
 		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
 	}
@@ -90,11 +80,9 @@ public class DeckTests
 		var deckName = "My test";
 		string? deckDescription = null;
 		var userId = Guid.NewGuid();
-		var originalLanguage = "English";
-		var translatedLanguage = "Spanish";
 
 		// Act
-		var deck = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage).AssertIsSuccess();
+		var deck = Deck.Create(deckName, deckDescription, userId).AssertIsSuccess();
 
 		// Assert
 		Assert.NotNull(deck);
@@ -102,98 +90,4 @@ public class DeckTests
 	}
 
 
-	[Fact]
-	public void Deck_ThrowsArgumentNullException_WhenOriginalLanguageIsNull()
-	{
-		// Arrange
-		var deckName = "My test";
-		var deckDescription = "This is a test deck";
-		var userId = Guid.NewGuid();
-		string? originalLanguage = null;
-		var translatedLanguage = "Spanish";
-
-		// Act & Assert
-		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage!, translatedLanguage);
-		Assert.False(deckResult.IsSuccess);
-		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
-	}
-
-	[Fact]
-	public void Deck_ThrowsArgumentException_WhenOriginalLanguageIsEmpty()
-	{
-		// Arrange
-		var deckName = "My test";
-		var deckDescription = "This is a test deck";
-		var userId = Guid.NewGuid();
-		var originalLanguage = string.Empty;
-		var translatedLanguage = "Spanish";
-
-		// Act & Assert
-		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
-		Assert.False(deckResult.IsSuccess);
-		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
-	}
-
-	[Fact]
-	public void Deck_ThrowsArgumentException_WhenOriginalLanguageIsWhitespace()
-	{
-		// Arrange
-		var deckName = "My test";
-		var deckDescription = "This is a test deck";
-		var userId = Guid.NewGuid();
-		var originalLanguage = "   ";
-		var translatedLanguage = "Spanish";
-
-		// Act & Assert
-		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
-		Assert.False(deckResult.IsSuccess);
-		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
-	}
-
-	[Fact]
-	public void Deck_ThrowsArgumentNullException_WhenTranslatedLanguageIsNull()
-	{
-		// Arrange
-		var deckName = "My test";
-		var deckDescription = "This is a test deck";
-		var userId = Guid.NewGuid();
-		var originalLanguage = "English";
-		string? translatedLanguage = null;
-
-		// Act & Assert
-		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage!);
-		Assert.False(deckResult.IsSuccess);
-		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
-	}
-
-	[Fact]
-	public void Deck_ThrowsArgumentException_WhenTranslatedLanguageIsEmpty()
-	{
-		// Arrange
-		var deckName = "My test";
-		var deckDescription = "This is a test deck";
-		var userId = Guid.NewGuid();
-		var originalLanguage = "English";
-		var translatedLanguage = string.Empty;
-
-		// Act & Assert
-		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
-		Assert.False(deckResult.IsSuccess);
-		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
-	}
-
-	[Fact]
-	public void Deck_ThrowsArgumentException_WhenTranslatedLanguageIsWhitespace()
-	{
-		// Arrange
-		var deckName = "My test";
-		var deckDescription = "This is a test deck";
-		var userId = Guid.NewGuid();
-		var originalLanguage = "English";
-		var translatedLanguage = "   ";
-		// Act & Assert
-		var deckResult = Deck.TryCreate(deckName, deckDescription, userId, originalLanguage, translatedLanguage);
-		Assert.False(deckResult.IsSuccess);
-		Assert.Equal(ResultStatus.BusinessRuleViolated, deckResult.Status);
-	}
 }

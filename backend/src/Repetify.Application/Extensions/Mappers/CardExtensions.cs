@@ -55,8 +55,8 @@ public static class CardExtensions
 		return Card.Create(
 			id: cardId,
 			deckId: deckId,
-			front: cardDto.OriginalWord!,
-			back: cardDto.TranslatedWord!
+			front: cardDto.Front!,
+			back: cardDto.Back!
 		);
 	}
 }

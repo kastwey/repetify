@@ -18,16 +18,13 @@ namespace Repetify.Application.Services;
 public class DeckAppService : IDeckAppService
 {
 	private readonly IDeckValidator _deckValidator;
-	private readonly ICardReviewService _cardReviewService;
 	private readonly IDeckRepository _deckRepository;
 
 	public DeckAppService(
 		IDeckValidator deckValidator,
-		ICardReviewService cardReviewService,
 		IDeckRepository deckRepository)
 	{
 		_deckValidator = deckValidator ?? throw new ArgumentNullException(nameof(deckValidator));
-		_cardReviewService = cardReviewService ?? throw new ArgumentNullException(nameof(cardReviewService));
 		_deckRepository = deckRepository ?? throw new ArgumentNullException(nameof(deckRepository));
 	}
 
@@ -223,7 +220,7 @@ public class DeckAppService : IDeckAppService
 		{
 			await CheckUserPermissionAsync(deckId, userId).EnsureSuccessAsync().ConfigureAwait(false);
 			var card = await _deckRepository.GetCardByIdAsync(deckId, cardId).EnsureSuccessAsync().ConfigureAwait(false);
-			_cardReviewService.UpdateReview(card, isCorrect);
+			card.ApplyReview(isCorrect ? 5 : 1).EnsureSuccess();
 			await _deckRepository.UpdateCardAsync(card).EnsureSuccessAsync().ConfigureAwait(false);
 			await _deckRepository.SaveChangesAsync().ConfigureAwait(false);
 			return ResultFactory.Success();

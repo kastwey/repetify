@@ -21,7 +21,6 @@ namespace Repetify.Application.UnitTests.Services;
 public class DeckAppServiceTests
 {
 	private readonly Mock<IDeckValidator> _deckValidatorMock = new();
-	private readonly Mock<ICardReviewService> _cardReviewServiceMock = new();
 	private readonly Mock<IDeckRepository> _deckRepositoryMock = new();
 	private readonly DeckAppService _service;
 
@@ -31,13 +30,13 @@ public class DeckAppServiceTests
 
 	public DeckAppServiceTests()
 	{
-		_service = new DeckAppService(_deckValidatorMock.Object, _cardReviewServiceMock.Object, _deckRepositoryMock.Object);
+		_service = new DeckAppService(_deckValidatorMock.Object,_deckRepositoryMock.Object);
 	}
 
 	[Fact]
 	public async Task AddDeckAsync_ReturnsSuccess_WhenValid()
 	{
-		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		var dto = new AddOrUpdateDeckDto { Name = "Deck" };
 		_deckValidatorMock.Setup(v => v.EnsureIsValidAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.AddDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
@@ -51,7 +50,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task AddDeckAsync_ReturnsFailure_WhenValidationFails()
 	{
-		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		var dto = new AddOrUpdateDeckDto { Name = "Deck" };
 		_deckValidatorMock.Setup(v => v.EnsureIsValidAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.InvalidArgument("error"));
 
 		var result = await _service.AddDeckAsync(dto, _userId);
@@ -63,7 +62,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task AddDeckAsync_ReturnsFailure_WhenRepositoryFails()
 	{
-		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		var dto = new AddOrUpdateDeckDto { Name = "Deck" };
 		_deckValidatorMock.Setup(v => v.EnsureIsValidAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.AddDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Conflict("error"));
 
@@ -76,7 +75,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task UpdateDeckAsync_ReturnsSuccess_WhenValid()
 	{
-		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		var dto = new AddOrUpdateDeckDto { Name = "Deck" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
 		_deckValidatorMock.Setup(v => v.EnsureIsValidAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.UpdateDeckAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.Success());
@@ -90,7 +89,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task UpdateDeckAsync_ReturnsFailure_WhenNoPermission()
 	{
-		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		var dto = new AddOrUpdateDeckDto { Name = "Deck" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
 
 		var result = await _service.UpdateDeckAsync(_deckId, dto, _userId);
@@ -102,7 +101,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task UpdateDeckAsync_ReturnsFailure_WhenValidationFails()
 	{
-		var dto = new AddOrUpdateDeckDto { Name = "Deck", OriginalLanguage = "en", TranslatedLanguage = "es" };
+		var dto = new AddOrUpdateDeckDto { Name = "Deck" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
 		_deckValidatorMock.Setup(v => v.EnsureIsValidAsync(It.IsAny<Deck>())).ReturnsAsync(ResultFactory.InvalidArgument("error"));
 
@@ -207,7 +206,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task AddCardAsync_ReturnsSuccess_WhenValid()
 	{
-		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		var dto = new AddOrUpdateCardDto { Front = "hello", Back = "hola" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
 		_deckRepositoryMock.Setup(r => r.AddCardAsync(It.IsAny<Card>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
@@ -221,7 +220,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task AddCardAsync_ReturnsFailure_WhenNoPermission()
 	{
-		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		var dto = new AddOrUpdateCardDto { Front = "hello", Back = "hola" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
 
 		var result = await _service.AddCardAsync(dto, _deckId, _userId);
@@ -233,7 +232,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task AddCardAsync_ReturnsFailure_WhenRepositoryFails()
 	{
-		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		var dto = new AddOrUpdateCardDto { Front = "hello", Back = "hola" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
 		_deckRepositoryMock.Setup(r => r.AddCardAsync(It.IsAny<Card>())).ReturnsAsync(ResultFactory.Conflict("error"));
 
@@ -246,7 +245,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task UpdateCardAsync_ReturnsSuccess_WhenValid()
 	{
-		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		var dto = new AddOrUpdateCardDto { Front = "hello", Back = "hola" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
 		_deckRepositoryMock.Setup(r => r.UpdateCardAsync(It.IsAny<Card>())).ReturnsAsync(ResultFactory.Success());
 		_deckRepositoryMock.Setup(r => r.SaveChangesAsync()).Returns(Task.CompletedTask);
@@ -259,7 +258,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task UpdateCardAsync_ReturnsFailure_WhenNoPermission()
 	{
-		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		var dto = new AddOrUpdateCardDto { Front = "hello", Back = "hola" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck(Guid.NewGuid())));
 
 		var result = await _service.UpdateCardAsync(dto, _deckId, _cardId, _userId);
@@ -271,7 +270,7 @@ public class DeckAppServiceTests
 	[Fact]
 	public async Task UpdateCardAsync_ReturnsFailure_WhenRepositoryFails()
 	{
-		var dto = new AddOrUpdateCardDto { OriginalWord = "hello", TranslatedWord = "hola" };
+		var dto = new AddOrUpdateCardDto { Front = "hello", Back = "hola" };
 		_deckRepositoryMock.Setup(r => r.GetDeckByIdAsync(_deckId)).ReturnsAsync(ResultFactory.Success(CreateDeck()));
 		_deckRepositoryMock.Setup(r => r.UpdateCardAsync(It.IsAny<Card>())).ReturnsAsync(ResultFactory.Conflict("error"));
 
@@ -462,7 +461,6 @@ public class DeckAppServiceTests
 		var result = await _service.ReviewCardAsync(_deckId, _cardId, _userId, true);
 
 		Assert.True(result.IsSuccess);
-		_cardReviewServiceMock.Verify(s => s.UpdateReview(card, true), Times.Once);
 	}
 
 	[Fact]
@@ -503,8 +501,8 @@ public class DeckAppServiceTests
 	}
 
 	private Deck CreateDeck(Guid? userId = null) =>
-	Deck.TryCreate(_deckId, "Deck", "Desc", userId ?? _userId, "en", "es").AssertIsSuccess();
+	Deck.Create(_deckId, "Deck", "Desc", userId ?? _userId).AssertIsSuccess();
 
 	private Card CreateCard(Guid? deckId = null) =>
-		Card.Create(_cardId, deckId ?? _deckId, "hello", "hola", 0, DateTime.UtcNow.AddDays(1), DateTime.MinValue).AssertIsSuccess();
+		Card.Create(_cardId, deckId ?? _deckId, "hello", "hola", 0, 0, 2.5, 1, DateTime.UtcNow.AddDays(1), DateTime.MinValue).AssertIsSuccess();
 }

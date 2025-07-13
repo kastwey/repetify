@@ -15,13 +15,11 @@ public class DeckExtensionsTests
 		// Arrange
 		var deckId = Guid.NewGuid();
 		var userId = Guid.NewGuid();
-		var deck = Deck.TryCreate(
+		var deck = Deck.Create(
 			id: deckId,
 			name: "Spanish Vocabulary",
 			description: "Basic Spanish words",
-			userId: userId,
-			originalLanguage: "Spanish",
-			translatedLanguage: "English"
+			userId: userId
 		).AssertIsSuccess();
 
 		// Act
@@ -33,8 +31,6 @@ public class DeckExtensionsTests
 		Assert.Equal(deck.Name, entity.Name);
 		Assert.Equal(deck.Description, entity.Description);
 		Assert.Equal(deck.UserId, entity.UserId);
-		Assert.Equal(deck.OriginalLanguage, entity.OriginalLanguage);
-		Assert.Equal(deck.TranslatedLanguage, entity.TranslatedLanguage);
 	}
 
 	[Fact]
@@ -47,8 +43,6 @@ public class DeckExtensionsTests
 			Name = "French Vocabulary",
 			Description = "Intermediate French words",
 			UserId = Guid.NewGuid(),
-			OriginalLanguage = "French",
-			TranslatedLanguage = "English"
 		};
 
 		// Act
@@ -60,8 +54,6 @@ public class DeckExtensionsTests
 		Assert.Equal(deckEntity.Name, domain.Name);
 		Assert.Equal(deckEntity.Description, domain.Description);
 		Assert.Equal(deckEntity.UserId, domain.UserId);
-		Assert.Equal(deckEntity.OriginalLanguage, domain.OriginalLanguage);
-		Assert.Equal(deckEntity.TranslatedLanguage, domain.TranslatedLanguage);
 	}
 
 	[Fact]
@@ -93,17 +85,13 @@ public class DeckExtensionsTests
 			Name = "Old Name",
 			Description = "Old Description",
 			UserId = Guid.NewGuid(),
-			OriginalLanguage = "Old Language",
-			TranslatedLanguage = "Old Translated Language"
 		};
 
-		var deckDomain = Deck.TryCreate(
+		var deckDomain = Deck.Create(
 			id: deckEntity.Id,
 			name: "Updated Name",
 			description: "Updated Description",
-			userId: deckEntity.UserId,
-			originalLanguage: "Updated Language",
-			translatedLanguage: "Updated Translated Language"
+			userId: deckEntity.UserId
 		).AssertIsSuccess();
 
 		// Act
@@ -114,8 +102,6 @@ public class DeckExtensionsTests
 		Assert.Equal(deckDomain.Name, deckEntity.Name);
 		Assert.Equal(deckDomain.Description, deckEntity.Description);
 		Assert.Equal(deckDomain.UserId, deckEntity.UserId);
-		Assert.Equal(deckDomain.OriginalLanguage, deckEntity.OriginalLanguage);
-		Assert.Equal(deckDomain.TranslatedLanguage, deckEntity.TranslatedLanguage);
 	}
 
 	[Theory]
@@ -127,16 +113,12 @@ public class DeckExtensionsTests
 		DeckEntity? deckEntity = !dataEntityIsNull? new DeckEntity
 		{
 			Name = "Deck test",
-			OriginalLanguage = "English",
-			TranslatedLanguage = "Spanish",
 		} : null;
-		Deck? deck = !domainIsNull ? Deck.TryCreate(
+		Deck? deck = !domainIsNull ? Deck.Create(
 			id: Guid.NewGuid(),
 			name: "Test Name",
 			description: "Test Description",
-			userId: Guid.NewGuid(),
-			originalLanguage: "English",
-			translatedLanguage: "English"
+			userId: Guid.NewGuid()
 		).AssertIsSuccess() : null;
 
 		// Act & Assert

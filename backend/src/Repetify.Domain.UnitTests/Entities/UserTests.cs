@@ -21,7 +21,7 @@ public class UserTests
 	}
 
 	[Fact]
-	public void User_ThrowsArgumentNullException_WhenUsernameIsNull()
+	public void User_ReturnsInvalidArgumentResult_WhenUsernameIsNull()
 	{
 		// Arrange
 		string? username = null;
@@ -32,7 +32,7 @@ public class UserTests
 	}
 
 	[Fact]
-	public void User_ThrowsArgumentException_WhenUsernameIsEmpty()
+	public void User_ReturnsInvalidArgumentResult_WhenUsernameIsEmpty()
 	{
 		// Arrange
 		var username = string.Empty;
@@ -43,7 +43,7 @@ public class UserTests
 	}
 
 	[Fact]
-	public void User_ThrowsArgumentException_WhenUsernameIsWhitespace()
+	public void User_ReturnsInvalidArgumentResult_WhenUsernameIsWhitespace()
 	{
 		// Arrange
 		var username = "   ";
@@ -54,7 +54,7 @@ public class UserTests
 	}
 
 	[Fact]
-	public void User_ThrowsArgumentNullException_WhenEmailIsNull()
+	public void User_ReturnsInvalidArgumentResult_WhenEmailIsNull()
 	{
 		// Arrange
 		var username = "JohnDoe";
@@ -65,7 +65,7 @@ public class UserTests
 	}
 
 	[Fact]
-	public void User_ThrowsArgumentException_WhenEmailIsEmpty()
+	public void User_ReturnsInvalidArgumentResult_WhenEmailIsEmpty()
 	{
 		// Arrange
 		var username = "JohnDoe";
@@ -76,7 +76,7 @@ public class UserTests
 	}
 
 	[Fact]
-	public void User_ThrowsArgumentException_WhenEmailIsWhitespace()
+	public void User_ReturnsInvalidArgumentResult_WhenEmailIsWhitespace()
 	{
 		// Arrange
 		var username = "JohnDoe";
@@ -87,7 +87,7 @@ public class UserTests
 	}
 
 	[Fact]
-	public void User_ThrowsArgumentException_WhenEmailIsInvalid()
+	public void User_ReturnsInvalidArgumentResult_WhenEmailIsInvalid()
 	{
 		// Arrange
 		var username = "JohnDoe";

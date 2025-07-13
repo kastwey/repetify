@@ -35,12 +35,10 @@ public class DeckValidatorTests
 
 		var validator = new DeckValidator(mockDeckRepository.Object);
 
-		var deck = Deck.TryCreate(
+		var deck = Deck.Create(
 			name: "DuplicateName",
 			description: "Deck Desc",
-			userId: Guid.NewGuid(),
-			originalLanguage: "English",
-			translatedLanguage: "Spanish"
+			userId: Guid.NewGuid()
 		).AssertIsSuccess();
 
 		// Act
@@ -62,12 +60,10 @@ public class DeckValidatorTests
 
 		var validator = new DeckValidator(mockDeckRepository.Object);
 
-		var deck = Deck.TryCreate(
+		var deck = Deck.Create(
 			name: "UniqueName",
 			description: "Some description",
-			userId: Guid.NewGuid(),
-			originalLanguage: "English",
-			translatedLanguage: "Spanish"
+			userId: Guid.NewGuid()
 		).AssertIsSuccess();
 
 		// Act

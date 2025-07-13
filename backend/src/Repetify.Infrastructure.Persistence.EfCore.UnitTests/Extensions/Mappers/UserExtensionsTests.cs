@@ -23,7 +23,7 @@ public class UserExtensionsTests
 	}
 
 	[Fact]
-	public void ToDataEntity_NullUserDomain_ThrowsArgumentNullException()
+	public void ToDataEntity_NullUserDomain_ReturnsInvalidArgumentResult()
 	{
 		// Arrange  
 		User? userDomain = null;
@@ -54,7 +54,7 @@ public class UserExtensionsTests
 	}
 
 	[Fact]
-	public void ToDomain_NullUserEntity_ThrowsArgumentNullException()
+	public void ToDomain_NullUserEntity_ReturnsInvalidArgumentResult()
 	{
 		// Arrange  
 		UserEntity? userEntity = null;
@@ -84,7 +84,7 @@ public class UserExtensionsTests
 	}
 
 	[Fact]
-	public void UpdateFromDomain_NullUserEntity_ThrowsArgumentNullException()
+	public void UpdateFromDomain_NullUserEntity_ReturnsInvalidArgumentResult()
 	{
 		// Arrange  
 		UserEntity? userEntity = null;
@@ -95,7 +95,7 @@ public class UserExtensionsTests
 	}
 
 	[Fact]
-	public void UpdateFromDomain_NullUserDomain_ThrowsArgumentNullException()
+	public void UpdateFromDomain_NullUserDomain_ReturnsInvalidArgumentResult()
 	{
 		// Arrange  
 		var userEntity = new UserEntity

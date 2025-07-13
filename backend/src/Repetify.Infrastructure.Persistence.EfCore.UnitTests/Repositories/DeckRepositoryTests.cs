@@ -19,7 +19,7 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid(), "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid()).AssertIsSuccess();
 
 		// Act
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
@@ -30,7 +30,6 @@ public class DeckRepositoryTests
 		// Assert
 		Assert.NotNull(storedDeck);
 		Assert.Equal(deck.Name, storedDeck.Name);
-		Assert.Equal(deck.OriginalLanguage, storedDeck.OriginalLanguage);
 	}
 
 	[Fact]
@@ -40,12 +39,12 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Original Name", "Original Description", Guid.NewGuid(), "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Original Name", "Original Description", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
 		// Act
-		deck = Deck.TryCreate(deck.Id, "Updated Name", "Updated Description", deck.UserId, deck.OriginalLanguage, deck.TranslatedLanguage).AssertIsSuccess();
+		deck = Deck.Create(deck.Id, "Updated Name", "Updated Description", deck.UserId).AssertIsSuccess();
 		(await repository.UpdateDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -63,7 +62,7 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Deck to delete", "Test", Guid.NewGuid(), "EN", "FR").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Deck to delete", "Test", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -98,7 +97,7 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Spanish Deck", "Learning Spanish", Guid.NewGuid(), "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Spanish Deck", "Learning Spanish", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -109,7 +108,6 @@ public class DeckRepositoryTests
 		Assert.NotNull(result);
 		Assert.True(result.IsSuccess);
 		Assert.Equal(deck.Name, result.Value!.Name);
-		Assert.Equal(deck.OriginalLanguage, result.Value!.OriginalLanguage);
 	}
 
 	[Fact]
@@ -135,8 +133,8 @@ public class DeckRepositoryTests
 		var repository = new DeckRepository(dbContext);
 
 		var userId = Guid.NewGuid();
-		var deck1 = Deck.TryCreate(Guid.NewGuid(), "Deck 1", "Description 1", userId, "EN", "FR").AssertIsSuccess();
-		var deck2 = Deck.TryCreate(Guid.NewGuid(), "Deck 2", "Description 2", userId, "EN", "ES").AssertIsSuccess();
+		var deck1 = Deck.Create(Guid.NewGuid(), "Deck 1", "Description 1", userId).AssertIsSuccess();
+		var deck2 = Deck.Create(Guid.NewGuid(), "Deck 2", "Description 2", userId).AssertIsSuccess();
 
 		(await repository.AddDeckAsync(deck1)).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck2)).AssertIsSuccess();
@@ -182,8 +180,8 @@ public class DeckRepositoryTests
 		var userId1 = Guid.NewGuid();
 		var userId2 = Guid.NewGuid();
 
-		var deck1 = Deck.TryCreate(Guid.NewGuid(), "Deck 1", "Description 1", userId1, "EN", "FR").AssertIsSuccess();
-		var deck2 = Deck.TryCreate(Guid.NewGuid(), "Deck 2", "Description 2", userId2, "EN", "ES").AssertIsSuccess();
+		var deck1 = Deck.Create(Guid.NewGuid(), "Deck 1", "Description 1", userId1).AssertIsSuccess();
+		var deck2 = Deck.Create(Guid.NewGuid(), "Deck 2", "Description 2", userId2).AssertIsSuccess();
 
 		(await repository.AddDeckAsync(deck1)).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck2)).AssertIsSuccess();
@@ -211,9 +209,9 @@ public class DeckRepositoryTests
 
 		var decks = new List<Deck>
 		{
-			Deck.TryCreate(Guid.NewGuid(), "Deck A", "Desc A", userId, "EN", "DE").AssertIsSuccess(),
-			Deck.TryCreate(Guid.NewGuid(), "Deck B", "Desc B", userId, "EN", "IT").AssertIsSuccess(),
-			Deck.TryCreate(Guid.NewGuid(), "Deck C", "Desc C", userId, "EN", "PT").AssertIsSuccess()
+			Deck.Create(Guid.NewGuid(), "Deck A", "Desc A", userId).AssertIsSuccess(),
+			Deck.Create(Guid.NewGuid(), "Deck B", "Desc B", userId).AssertIsSuccess(),
+			Deck.Create(Guid.NewGuid(), "Deck C", "Desc C", userId).AssertIsSuccess()
 		};
 
 		foreach (var deck in decks)
@@ -240,7 +238,7 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid(), "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -267,7 +265,7 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid(), "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -289,7 +287,7 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Vocabulary", "Spanish words", Guid.NewGuid(), "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Vocabulary", "Spanish words", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -310,7 +308,7 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid(), "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Test Deck", "Test Description", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -319,7 +317,7 @@ public class DeckRepositoryTests
 		await repository.SaveChangesAsync();
 
 		// Act
-		card = Card.Create(card.Id, card.DeckId, "Updated Word", "Updated Translation", card.CorrectReviewStreak, card.NextReviewDate, card.PreviousCorrectReview).AssertIsSuccess();
+		card = Card.Create(card.Id, card.DeckId, "Updated Word", "Updated Translation", card.CorrectReviewStreak, card.Repetitions, card.EaseFactor,  card.Interval, card.NextReviewDate, card.PreviousCorrectReview).AssertIsSuccess();
 		(await repository.UpdateCardAsync(card)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -336,11 +334,11 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Languages", "Learning French", Guid.NewGuid(), "EN", "FR").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Languages", "Learning French", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
-		var card = Card.Create(Guid.NewGuid(), deck.Id, "Chat", "Cat").AssertIsSuccess();
+		var card = Card.Create(Guid.NewGuid(), (Guid)deck.Id, "Chat", "Cat").AssertIsSuccess();
 		(await repository.AddCardAsync(card)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -358,7 +356,7 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Practice", "Deck for tests", Guid.NewGuid(), "EN", "IT").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Practice", "Deck for tests", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -375,12 +373,12 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var repository = new DeckRepository(dbContext);
 
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Words", "Deck description", Guid.NewGuid(), "EN", "DE").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Words", "Deck description", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
 		// Act
-		var card = Card.Create(Guid.NewGuid(), deck.Id, "Auto", "Car").AssertIsSuccess();
+		var card = Card.Create(Guid.NewGuid(), (Guid)deck.Id, "Auto", "Car").AssertIsSuccess();
 		(await repository.AddCardAsync(card)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -401,8 +399,8 @@ public class DeckRepositoryTests
 
 		var userId = Guid.NewGuid();
 		var name = "should be unique";
-		var deck = Deck.TryCreate(Guid.NewGuid(), name, "Description", userId, "EN", "ES").AssertIsSuccess();
-		var deckToTest = Deck.TryCreate(Guid.NewGuid(), name, "Description", userId, "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), name, "Description", userId).AssertIsSuccess();
+		var deckToTest = Deck.Create(Guid.NewGuid(), name, "Description", userId).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -422,8 +420,8 @@ public class DeckRepositoryTests
 		var repository = new DeckRepository(dbContext);
 
 		var name = "should be unique";
-		var deck = Deck.TryCreate(Guid.NewGuid(), name, "Description", Guid.NewGuid(), "EN", "ES").AssertIsSuccess();
-		var deckToTest = Deck.TryCreate(Guid.NewGuid(), name, "Description", Guid.NewGuid(), "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), name, "Description", Guid.NewGuid()).AssertIsSuccess();
+		var deckToTest = Deck.Create(Guid.NewGuid(), name, "Description", Guid.NewGuid()).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -442,7 +440,7 @@ public class DeckRepositoryTests
 		using var dbContext = TestsHelper.CreateInMemoryDbContext();
 		var userId = Guid.NewGuid();
 		var repository = new DeckRepository(dbContext);
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Existing Deck", "Description", userId, "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Existing Deck", "Description", userId).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 
@@ -462,7 +460,7 @@ public class DeckRepositoryTests
 		var repository = new DeckRepository(dbContext);
 
 		var userId = Guid.NewGuid();
-		var deck = Deck.TryCreate(Guid.NewGuid(), "Existing Deck", "Description", userId, "EN", "ES").AssertIsSuccess();
+		var deck = Deck.Create(Guid.NewGuid(), "Existing Deck", "Description", userId).AssertIsSuccess();
 		(await repository.AddDeckAsync(deck)).AssertIsSuccess();
 		await repository.SaveChangesAsync();
 

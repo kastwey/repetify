@@ -43,7 +43,6 @@ internal static class RepetifyDiConfig
 	private static IServiceCollection AddDomainDependencies(this IServiceCollection services)
 	{
 		services.AddScoped<IDeckValidator, DeckValidator>();
-		services.AddSingleton<ICardReviewService, CardReviewService>();
 		return services;
 	}
 
